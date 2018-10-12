@@ -219,7 +219,6 @@ struct node *build_tree(char *exp[], int len, int par, int *end, int *error)
                 err_number = 2;
                 break;
             }
-            gate = 1;
             i++;
             continue;
         }
@@ -232,8 +231,8 @@ struct node *build_tree(char *exp[], int len, int par, int *end, int *error)
                *error = 1;
                 break;
             }
-            new = build_tree(exp + i + 1, len - (i + 1), par , NULL, error);
-            link_nodes(root, new, 1);
+            new = build_tree(exp + i + 2, len - (i + 2), par , end, error);
+            root = link_nodes(root, new, 1);
             break;
         }
         if(!strcmp(exp[i], "("))
@@ -243,7 +242,6 @@ struct node *build_tree(char *exp[], int len, int par, int *end, int *error)
                 int add = 0;
                 new = build_tree(exp + i + 1, len - (i + 1), par + 1, &add,\
                 error);
-                new->barre = barre % 2;
                 i = i + add;
             }
             else
