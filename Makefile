@@ -1,6 +1,6 @@
 CC ?= gcc
 CFLAGS = -std=c99 -pedantic -Werror -Wall -Wextra
-SRC = src/
+SRC = src/*.c
 OBJ = {SRC:.c=.o}
 BIN = myfind
 
@@ -11,8 +11,8 @@ all: $(BIN)
 $(BIN): $(SRC)
 	$(CC) $(CFLAGS) -o $(@) $(SRC)
 
-test:
-	./tests/test.sh
+test: $(BIN)
+	./tests/tests.sh
 
 clean:
 	$(RM) $(BIN)

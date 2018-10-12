@@ -2,13 +2,6 @@
 #include "cmd.h"
 #include "useful.h"
 
-int get_size(char *str)
-{
-    int i = 0;
-    for(; str[i] != '\0'; ++i);
-    return i+1;
-}
-
 void append_string(char *dest, char *first, char *second)
 {
     int i = 0;
@@ -63,13 +56,15 @@ void fix_path(char *str)
 
 int my_print(DIR *dir, char *str)
 {
+    int res = 0;
     struct dirent *de;
     dir = opendir(str);
     if(!dir)
     {
-        fprintf(stderr, "myfind: cannot do opendir(%s): can't open directory",\
-        str);
-        return 1;
+        fprintf(stderr, "myfind: cannot do opendir(%s): can't open directory\n"\
+        ,str);
+        res = 1;
+        return res;
     }
     printf("%s\n", str);
     fix_path(str);
@@ -77,20 +72,26 @@ int my_print(DIR *dir, char *str)
     {
         if(my_strcmp(de->d_name, ".") && my_strcmp(de->d_name, ".."))
         {
+           // printf("\nreading %s\n", de->d_name);
             if(de->d_type == DT_DIR)
             {
+             //   printf("\nis dir %s\n", de->d_name);
                 char *arg = malloc((get_size(str)  + get_size(de->d_name))*\
                 sizeof(char) +1);
                 append_string(arg, str, de->d_name);
-                return 0 + my_print(dir, arg);
+                res += my_print(dir, arg);
             }
             else
                 printf("%s%s\n", str, de->d_name);
         }
     }
+    //if(!de)
+    //{
+    //    printf("\n de is empty in %s\n", str);
+    //}
     free(str);
     closedir(dir);
-    return 0;
+    return res;
 }
 
 /*
@@ -121,7 +122,7 @@ int print(struct cmd_arg *args)
     {
         char *arg = malloc(get_size(args->arg) * sizeof(char) + 1);
         append_string(arg, args->arg, "");
-        error += my_print(dir, arg);
+        error = my_print(dir, arg);
     }
     return (error > 0);
 }
@@ -138,8 +139,7 @@ int main(int argc, char *argv[])
 {
     struct cmd *commands = get_commands();
     struct cmd_arg *args= parse_arg(1, argc, argv);
-    commands[0].handle(args);
-    return 0;
+    return commands[0].handle(args);
 }
 /*
 int call_command(const char *str, const char **arg)

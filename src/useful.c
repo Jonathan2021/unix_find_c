@@ -1,5 +1,12 @@
 #include "libraries.h"
 
+int get_size(char *str)
+{
+    int i = 0;
+    for(; str[i] != '\0'; ++i);
+    return i+1;
+}
+
 int my_strcmp(const char *a, const char *b)
 {
     size_t i = 0;
