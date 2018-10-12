@@ -2,12 +2,12 @@
 #include "parse_tree.h"
 #include "useful.h"
 
-int print()
+//int print()
 
-int evaluate tree(struct node *root)
-{
+//int evaluate tree(struct node *root)
+//{
     
-}
+//}
 
 struct node *init_node(void)
 {
@@ -145,12 +145,12 @@ int add_arg(struct node *n, char *exp[], int i, int len)
                     s = "-exec";
                 else
                     s = "-execdir";
-                printf("myfind: paramètre manquant pour « %s »;", s);
+                fprintf(stderr, "myfind: paramètre manquant pour « %s »;", s);
                 start = -1;
             }
             break;
         default:
-                printf("myfind: prédicat inconnu « %s »", exp[i-1]);
+                fprintf(stderr, "myfind: prédicat inconnu « %s »", exp[i-1]);
                 break;
     }
     return start;
@@ -161,31 +161,31 @@ void set_error(int error_number, int *error)
     switch (error_number)
     {
         case 1:
-            printf("myfind: expression non valide; « ( »  attendue mais \
+            perror("myfind: expression non valide; « ( »  attendue mais \
             non détectée.\n");
             break;
         case 2: 
-            printf("myfind: expression non valide ; vous avez utilisé un \
+            perror("myfind: expression non valide ; vous avez utilisé un \
             opérateur binaire « -a » non précédé d'une expression.\n");
             break;
         case 3:
-            printf("myfind: expression non valide ; vous avez utilisé un \
+            perror("myfind: expression non valide ; vous avez utilisé un \
             opérateur binaire « -o » non précédé d'une expression.\n");
             break;
         case 4:
-            printf("myfind: expression non valide. « ) » était attendue m\
+            perror("myfind: expression non valide. « ) » était attendue m\
             ais n'a pas été détectée. Peut-être faut-il un autre prédicat \
             après « ( ».\n");
             break;
         case 5:
-            printf("bash: erreur de syntaxe près du symbole inattendu « \
+            perror("bash: erreur de syntaxe près du symbole inattendu « \
             ( »\n");
             break;
         case 6:
-            printf("myfind: creating new node returned NULL\n");
+            perror("myfind: creating new node returned NULL\n");
             break;
         default:
-            printf("something wrong happened\n");
+            perror("something wrong happened\n");
     }
     *error = 1;
 }
