@@ -170,7 +170,7 @@ void free_tree(struct node *root)
     if(!root)
         return;
     if(root->arg)
-        free((char *)root->arg);
+        free((char*)root->arg);
     free_tree(root->left);
     free_tree(root->right);
     free(root);
