@@ -215,7 +215,11 @@ int my_execdir(struct node *n, char *path, char *file)
     }
     if(!pid)
     {
-        chdir(path);
+        if (chdir(path) < 0)
+        {
+            fprintf(stderr,"chdir failed\n");
+            exit(1);
+        }
         char **args = get_args(n, new_path);
         if(execvp(n->arg, args)  < 0)
         {
