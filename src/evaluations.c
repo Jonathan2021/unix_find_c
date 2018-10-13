@@ -134,10 +134,69 @@ int is_newer(char *path, struct node *n)
     }
     return (buf_path.st_mtime > buf_compare.st_mtime);
 }
-/*
-int my_exec(struct node *n, char * path)
-{
 
+char **get_args(struct node* n, char *path)
+{
+    int j = 0;
+    int size;
+    int is_replaced;
+    char **res = malloc((n->elements + 1) * sizeof(char *));
+    for(int i = 0; i < n->elements; ++i)
+    {
+        is_replaced = 0;
+        if(!my_strcmp(n->arg + j, "{}"))
+            size = get_size(path);
+        else
+            size = get_size(n->arg + j);
+        char *new_arg = malloc(size * sizeof(char));
+        for(int k = 0; n->arg[j] != '\0'; ++j)
+        {
+            if(!is_replaced)
+                new_arg[i] = n->arg[j];
+            k++;
+        }
+        for(int k = 0; is_replaced && path[k] != '\0'; ++k)
+        {
+            new_arg[k] = path[k];
+        }
+        new_arg[size - 1] = '\0';
+        res[i] = new_arg;
+        j++;
+    }
+    res[n->elements] = NULL;
+    return res;
 }
-//int exec(char *to_exec)
-*/
+
+int my_exec(struct node *n, char *path)
+{
+    int res = 0;
+    if(n->is_plus != '+' && n->is_plus != ';')
+    {
+        fprintf(stderr, "myfind: -exec: expected + or ;");
+    }
+    pid_t pid = fork();
+    if(pid == -1)
+    {
+        fprintf(stderr, "myfind: -exec: fork failed\n");
+    }
+    if(!pid)
+    {
+        char **args = get_args(n, path);
+        if(execvp(n->arg, args)  < 0)
+        {
+            fprintf(stderr,"execvp failed\n");
+            exit(1);
+        }
+    }
+    else
+    {
+        int wstatus;
+        waitpid(pid, &wstatus, 0);
+        if(!WIFEXITED(wstatus))
+            return 0;
+        res = !WEXITSTATUS(wstatus);
+    }
+    if(n->is_plus == '+')
+        return 1;
+    return res;
+}

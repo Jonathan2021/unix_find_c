@@ -22,8 +22,8 @@ int evaluate_node(struct node *node, char *path, char *file)
           //      break;
         case PRINT:
             return (node->barre) ? !print_path(path) : print_path(path);
-        //case EXEC:
-          //      break;
+        case EXEC:
+            return (node->barre) ? !my_exec(node, path) : my_exec(node, path);
         //case EXECDIR:
         //        break;
         case DELETE:
@@ -140,15 +140,17 @@ struct node *init_node(void)
     res->left = NULL;
     res->right = NULL;
     res->is_plus = 0;
+    res->elements = 0;
     res->type = NOT_VALID;
     return res;
 }
-char *append_strings(char *strings[], int start, int stop)
+char *append_strings(char *strings[], int start, int stop, int *elements)
 {
     int size = 0;
     for(int i = start; i < stop; ++i)
     {
         size += get_size(strings[i]);
+        *elements += 1;
     }
     char *res = malloc(size * sizeof(char));
     int pos = 0;
@@ -159,10 +161,9 @@ char *append_strings(char *strings[], int start, int stop)
             res[pos] = strings[i][j];
             ++pos;
         }
-        res[pos] = ' ';
+        res[pos] = '\0';
         pos++;
     }
-    res[size - 1] = '\0';
     return res;
 }
 
@@ -254,7 +255,7 @@ int add_arg(struct node *n, char *exp[], int i, int len)
         case NEWER:
         case TYPE:
         case NAME:
-            n->arg = append_strings(exp, i, i+1);
+            n->arg = append_strings(exp, i, i+1, &n->elements);
             start = i+1;
             break;
         case EXEC:
@@ -264,7 +265,7 @@ int add_arg(struct node *n, char *exp[], int i, int len)
                 my_strcmp(exp[start], ";"); ++start);
             if(start<len)
             {
-                n->arg = append_strings(exp, i, start);
+                n->arg = append_strings(exp, i, start, &n->elements);
                 n->is_plus = *exp[start];
                 return start + 1;
             }
