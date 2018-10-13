@@ -9,6 +9,8 @@ extern "C" {
 #include "../src/parse_tree.h"
 }
 
+#define MAXDEPTH 3
+
 void __attribute__((noreturn)) error(const char* msg) {
   fprintf(stderr, "error: %s\n", msg);
   exit(1);
@@ -399,7 +401,7 @@ int main(void) {
   on_exit(dumpOnExit, 0);
 
   nodevector v;
-  generate_all(2, v);
+  generate_all(MAXDEPTH, v);
 
   for (nodevector::iterator i = v.begin(), e = v.end(); i != e; ++i) {
     struct node* orig = *i;
