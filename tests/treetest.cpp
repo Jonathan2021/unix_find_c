@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <set>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,6 +11,8 @@ extern "C" {
 }
 
 #define MAXDEPTH 3
+
+typedef std::vector<struct node*> nodevector;
 
 void __attribute__((noreturn)) error(const char* msg) {
   fprintf(stderr, "error: %s\n", msg);
@@ -52,9 +55,23 @@ int strictlyEquivalent(struct node* left, struct node* right) {
   return 0;
 }
 
+void flatten(struct node* node, nodevector& flat) {
+  if (node->left->type == node->type)
+    flatten(node->left, flat);
+  else
+    flat.push_back(node->left);
+
+  if (node->right->type == node->type)
+    flatten(node->right, flat);
+  else
+    flat.push_back(node->right);
+}
+
 int equivalent(struct node* left, struct node* right) {
   if (strictlyEquivalent(left, right))
     return 1;
+
+  // Allow and ignore pointless TRUE nodes in AND.
   if (left->type == AND) {
     if (left->left->type == TRUE && equivalent(left->right, right))
       return 1;
@@ -67,8 +84,37 @@ int equivalent(struct node* left, struct node* right) {
     if (right->right->type == TRUE && equivalent(right->left, left))
       return 1;
   }
-  //  TODO: In theory both might also be AND with a TRUE left or right.
-  return 0;
+  //  TODO: In theory both might also be AND with a TRUE left or right, but it
+  //  doesn't happen in practice with the depths of tree we consider.
+
+  // May need to rotate operators, eg (A AND B) AND C = A AND (B AND C).
+  if (!hasChildren(left->type) || !hasChildren(right->type))
+    return 0;
+  if (left->type != right->type)
+    return 0;
+
+  // Flatten (A AND B) AND C into [A, B, C].
+  nodevector lflat, rflat;
+  flatten(left, lflat);
+  flatten(right, rflat);
+
+  // For each node in the left list find an equivalent node in the right list.
+  std::set<struct node*> used;
+  for (nodevector::iterator i = lflat.begin(), e = lflat.end(); i != e; ++i) {
+    bool found = false;
+    for (nodevector::iterator j = rflat.begin(), f = rflat.end(); j != f; ++j) {
+      if (!used.count(*j)) {
+        if (equivalent(*i, *j)) {
+          used.insert(*j);
+          found = true;
+          break;
+        }
+      }
+    }
+    if (!found)
+      return 0;
+  }
+  return 1;
 }
 
 struct node* allocateNode(void) {
@@ -359,8 +405,6 @@ void printNode(struct node* node) {
   outputNode(node, strings);
   printStrings(strings);
 }
-
-typedef std::vector<struct node*> nodevector;
 
 void generate_all(int maxdepth, nodevector& nodes) {
   if (maxdepth < 0)
