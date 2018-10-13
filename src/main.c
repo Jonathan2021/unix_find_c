@@ -1,6 +1,7 @@
 #include "libraries.h"
 #include "cmd.h"
 #include "useful.h"
+#include "parse_tree.h"
 
 void append_string(char *dest, char *first, char *second)
 {
@@ -137,9 +138,13 @@ struct cmd *get_commands(void)
 
 int main(int argc, char *argv[])
 {
-    struct cmd *commands = get_commands();
-    struct cmd_arg *args= parse_arg(1, argc, argv);
-    return commands[0].handle(args);
+    int end = 0;
+    struct node *expr = build_tree(argv + 2, argc - 2, 0, &end);
+    print2D(expr);
+    free_tree(expr);
+    //struct cmd *commands = get_commands();
+    //struct cmd_arg *args= parse_arg(1, argc, argv);
+    //return commands[0].handle(args);
 }
 /*
 int call_command(const char *str, const char **arg)

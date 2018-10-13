@@ -1,4 +1,4 @@
-#include "libraries"
+#include "libraries.h"
 #include "parse_tree.h"
 #include "useful.h"
 
@@ -7,7 +7,7 @@ int delete(char *path)
     int res = unlink(path);
     if(res == -1)
         fprintf(stderr, "myfind: impossible de supprimer '%s': Le dossier n'est pas \
-        vide\n");
+        vide\n", path);
     return !res;
 }
 
@@ -19,7 +19,7 @@ int print_path(char *path)
 
 int name_match(char *pattern, char *file_name)
 {
-    int res = fnmatch(pattern, file_name);
+    int res = fnmatch(pattern, file_name, FNM_PATHNAME);
     return !res;
 }
 
@@ -32,11 +32,11 @@ int perm(char *path, mode_t mode, char tag)
         fprintf(stderr, "myfind: in -perm: couldn't get stat of %s\n", path);
         return 0;
     }
-    file_mode = buf.st_mode;
+    mode_t file_mode = buf.st_mode;
     if(tag == '-')
-        return (file_mode & mode == mode);
+        return ((file_mode & mode) == mode);
     else if(tag == '/' || tag == '+')
-        return (mode & file_mode != 0);
+        return ((mode & file_mode) != 0);
     else if(!tag)
         return (mode == file_mode);
     else
@@ -52,10 +52,10 @@ int is_user(char *path, uid_t user)
         fprintf(stderr, "myfind: in -user: couldn't get stat of %s\n", path);
         return 0;
     }
-    return (buf->st_uid == user);
+    return (buf.st_uid == user);
 }
 
-int is_group(char *pathi, gid_t group)
+int is_group(char *path, gid_t group)
 {
     struct stat buf;
     if(stat(path, &buf))
@@ -63,7 +63,7 @@ int is_group(char *pathi, gid_t group)
         fprintf(stderr, "myfind: in -group: couldn't get stat of %s\n", path);
         return 0;
     }
-    return (buf->st_gid == user);
+    return (buf.st_gid == group);
 }
 
 int is_newer(char *path, char *compare)
@@ -81,7 +81,7 @@ int is_newer(char *path, char *compare)
         compare);
         return 0;
     }
-    return (paht->st_time > compare->st_time);
+    return (buf_path.st_mtime > buf_compare.st_mtime);
 }
 
 //int exec(char *to_exec)i

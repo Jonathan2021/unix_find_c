@@ -9,6 +9,38 @@
     
 //}
 
+// Function to print binary tree in 2D
+// It does reverse inorder traversal
+void print2DUtil(struct node *root, int space) 
+{ 
+    // Base case 
+    if (root == NULL) 
+        return; 
+  
+    // Increase distance between levels 
+    space += COUNT; 
+  
+    // Process right child first 
+    print2DUtil(root->right, space); 
+  
+    // Print current node after space 
+    // count 
+    printf("\n"); 
+    for (int i = COUNT; i < space; i++) 
+        printf(" "); 
+    printf("%s\n", root->arg); 
+  
+    // Process left child 
+    print2DUtil(root->left, space); 
+} 
+  
+// Wrapper over print2DUtil() 
+void print2D(struct node *root) 
+{ 
+   // Pass initial space count as 0 
+   print2DUtil(root, 0); 
+}
+
 struct node *init_node(void)
 {
     struct node *res = malloc(sizeof(struct node));
@@ -146,17 +178,17 @@ int add_arg(struct node *n, char *exp[], int i, int len)
                 else
                     s = "-execdir";
                 fprintf(stderr, "myfind: paramètre manquant pour « %s »;", s);
-                start = -1;
+                exit(1);
             }
             break;
         default:
                 fprintf(stderr, "myfind: prédicat inconnu « %s »", exp[i-1]);
-                break;
+                exit(1);
     }
     return start;
 }
 
-void set_error(int error_number, int *error)
+void set_error(int error_number)
 {
     switch (error_number)
     {
@@ -187,9 +219,9 @@ void set_error(int error_number, int *error)
         default:
             perror("something wrong happened\n");
     }
-    *error = 1;
+    exit(1);
 }
-struct node *build_tree(char *exp[], int len, int par, int *end, int *error)
+struct node *build_tree(char *exp[], int len, int par, int *end)
 {
     struct node *root = init_node();
     if(!root)
@@ -198,7 +230,7 @@ struct node *build_tree(char *exp[], int len, int par, int *end, int *error)
     int gate = 0;
     int barre = 0;
     int err_number = 0;
-    for(int i = 0; i<len && !(*error) && !(err_number);)
+    for(int i = 0; i<len && !(err_number);)
     {
         if(!strcmp(exp[i], "!"))
             barre += 1;
@@ -228,10 +260,9 @@ struct node *build_tree(char *exp[], int len, int par, int *end, int *error)
             if(gate || barre)
             {
                 err_number = 3;
-               *error = 1;
                 break;
             }
-            new = build_tree(exp + i + 2, len - (i + 2), par , end, error);
+            new = build_tree(exp + i + 2, len - (i + 2), par , end);
             root = link_nodes(root, new, 1);
             break;
         }
@@ -240,8 +271,7 @@ struct node *build_tree(char *exp[], int len, int par, int *end, int *error)
             if(i+1 < len)
             {
                 int add = 0;
-                new = build_tree(exp + i + 1, len - (i + 1), par + 1, &add,\
-                error);
+                new = build_tree(exp + i + 1, len - (i + 1), par + 1, &add);
                 i = i + add;
             }
             else
@@ -256,13 +286,11 @@ struct node *build_tree(char *exp[], int len, int par, int *end, int *error)
             else if(i+1 < len)
                 i = add_arg(new, exp, i+1, len);
         }
-        if(i<0)
-            *error = 1;
         root = link_nodes(root, new, 0);
         gate = 0;
         barre = 0;
     }
     if(err_number)
-        set_error(err_number, error);
+        set_error(err_number);
     return root;
 }

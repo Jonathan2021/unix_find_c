@@ -1,6 +1,6 @@
 #ifndef _PARSE_TREE_H_
 #define _PARSE_TREE_H_
-
+#define COUNT 10
 enum type
 {
     TYPE = 0,
@@ -28,6 +28,10 @@ struct node
     struct node *right;
 };
 
-typedef int (*handler)(struct node);
+struct node *build_tree(char *exp[], int len, int par, int *end);
+void free_tree(struct node *root);
+void print2D(struct node *root);
+
+typedef int (*exp)(struct node);
 
 #endif
