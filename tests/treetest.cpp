@@ -327,21 +327,17 @@ void outputNode(struct node* node, stringvector &strings) {
     case OR:
       bool leftParens = node->left->type == AND;
       bool rightParens = node->right->type == AND;
-      size_t next = strings.size();
+      if (leftParens)
+        strings.push_back("(");
       outputNode(node->left, strings);
-      if (leftParens) {
-        strings[next] = "(" + strings[next];
-        next = strings.size() - 1;
-        strings[next] = strings[next] + ")";
-      }
+      if (leftParens)
+        strings.push_back(")");
       strings.push_back("-o");
-      next = strings.size();
+      if (rightParens)
+        strings.push_back("(");
       outputNode(node->right, strings);
-      if (rightParens) {
-        strings[next] = "(" + strings[next];
-        next = strings.size() - 1;
-        strings[next] = strings[next] + ")";
-      }
+      if (rightParens)
+        strings.push_back(")");
   }
 }
 
