@@ -15,8 +15,10 @@ files
 files -type d
 files -name a
 files -print
-files -exec echo hello ;
-files -execdir echo bye ;
+files -exec echo {} ;
+files -execdir echo {} ;
+files -exec ls ;
+files -execdir ls ;
 files -perm 755
 files -perm +755
 files -perm -5
