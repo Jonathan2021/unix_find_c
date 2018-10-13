@@ -155,7 +155,7 @@ char *append_strings(char *strings[], int start, int stop)
     {
         size += get_size(strings[i]);
     }
-    char *res = malloc(size * sizeof(char) + 1);
+    char *res = malloc(size * sizeof(char));
     int pos = 0;
     for(int i = start; i < stop; ++i)
     {
@@ -167,7 +167,7 @@ char *append_strings(char *strings[], int start, int stop)
         res[pos] = ' ';
         pos++;
     }
-    res[size] = '\0';
+    res[size - 1] = '\0';
     return res;
 }
 
@@ -344,7 +344,10 @@ struct node *build_tree(char *exp[], int len, int par, int *end)
             if(barre)
                 err_number = 5;
             else if(par)
-                *end = i+1;
+            {
+                *end += i+1;
+                printf("je trouve une parenthese fermante et renvoie la position %d\n", *end);
+            }
             else
                 err_number = 1;
             break;
@@ -367,6 +370,8 @@ struct node *build_tree(char *exp[], int len, int par, int *end)
                 err_number = 3;
                 break;
             }
+            if(par)
+                *end += i + 1;
             new = build_tree(exp + i + 1, len - (i + 1), par , end);
             root = link_nodes(root, new, 1);
             break;
@@ -377,7 +382,8 @@ struct node *build_tree(char *exp[], int len, int par, int *end)
             {
                 int add = 0;
                 new = build_tree(exp + i + 1, len - (i + 1), par + 1, &add);
-                i = i + 1 + add; 
+                i = i + 1 + add;
+                printf("je reprend à la position %d\n", i);
             }
             else
                 err_number = 4; 

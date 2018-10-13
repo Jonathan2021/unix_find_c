@@ -116,7 +116,7 @@ int is_newer(char *path, struct node *n)
         fprintf(stderr, "myfind: in -newer: couldn't get stat of %s\n", path);
         return 0;
     }
-    if(stat(path, &buf_compare))
+    if(stat(n->arg, &buf_compare))
     {
         fprintf(stderr, "myfind: in -groupe: couldn't get stat of %s\n", \
         compare);
