@@ -272,6 +272,7 @@ int add_arg(struct node *n, char *exp[], int i, int len)
             {
                 n->arg = append_strings(exp, i, start);
                 n->is_plus = *exp[start];
+                return start + 1;
             }
             else
             {

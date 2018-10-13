@@ -23,9 +23,10 @@ struct node
 {
     int barre;
     enum type type;
-    const char *arg;
+    char *arg;
     struct node *left; 
     struct node *right;
+    char is_plus;
 };
 
 struct node *build_tree(char *exp[], int len, int par, int *end);
