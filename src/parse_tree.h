@@ -27,6 +27,7 @@ struct node
     struct node *left; 
     struct node *right;
     char is_plus;
+    int elements;
 };
 
 struct node *build_tree(char *exp[], int len, int par, int *end);
