@@ -32,6 +32,6 @@ struct node *build_tree(char *exp[], int len, int par, int *end);
 void free_tree(struct node *root);
 void print2D(struct node *root);
 
-typedef int (*exp)(struct node);
+typedef int (*node_handler)(struct node);
 
 #endif

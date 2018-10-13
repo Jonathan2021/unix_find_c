@@ -3,14 +3,109 @@
 #include "useful.h"
 
 //int print()
-
-//int evaluate tree(struct node *root)
-//{
-    
-//}
+/*
+int evaluate_node(struct node *node, char *path, char *file)
+{
+    if(!node)
+    {
+        fprintf(stderr, "myfind: in evaluate_node: empty node");
+        return 0;
+    }
+     switch (n->type)
+    {
+        case NAME:
+                return name_match(node, file);
+                break;
+        case TYPE:
+                
+                break;
+        case PRINT:
+                return print_path(path);
+                break;
+        case EXEC:
+                break;
+        case EXECDIR:
+                break;
+        case DELETE:
+                delete(path);
+                break;
+        case PERM:
+                perm(path, node);
+                break;
+        case USER:
+                return is_user(path, node);
+                break;
+        case GROUP:
+                return is_group(path, n);
+                break;
+        case NEWER:
+                return is_newer(path, n);
+                break;
+        case AND:
+                return (evaluate(n->left) && evaluate(n->right));
+                break;
+        case OR:
+                return (evaluate(n->left) || evaluate(n->right));
+                break;
+        case TRUE:
+                return 1;
+                break;
+        default:
+                fprintf(stderr, "myfind: in evaluate_node: type NOT_VALIDE\n");
+    }
+    return 0;
+}
 
 // Function to print binary tree in 2D
 // It does reverse inorder traversal
+*/
+void print_type(struct node *n)
+{
+    switch (n->type)
+    {
+        case NAME:
+                printf("-name\n");
+                break;
+        case TYPE:
+                printf("-type\n");
+                break;
+        case PRINT:
+                printf("-print\n");
+                break;
+        case EXEC:
+                printf("-exec\n");
+                break;
+        case EXECDIR:
+                printf("-execdir\n");
+                break;
+        case DELETE:
+                printf("-delete\n");
+                break;
+        case PERM:
+                printf("-perm\n");
+                break;
+        case USER:
+                printf("-user\n");
+                break;
+        case GROUP:
+                printf("-group\n");
+                break;
+        case NEWER:
+                printf("-newer\n");
+                break;
+        case AND:
+                printf("-a\n");
+                break;
+        case OR:
+                printf("-o\n");
+                break;
+        case TRUE:
+                printf("true\n");
+                break;
+        default:
+                printf("not valid\n");
+    }
+}
 void print2DUtil(struct node *root, int space) 
 { 
     // Base case 
@@ -28,7 +123,7 @@ void print2DUtil(struct node *root, int space)
     printf("\n"); 
     for (int i = COUNT; i < space; i++) 
         printf(" "); 
-    printf("%s\n", root->arg); 
+    print_type(root);
   
     // Process left child 
     print2DUtil(root->left, space); 
@@ -58,7 +153,7 @@ char *append_strings(char *strings[], int start, int stop)
     int size = 0;
     for(int i = start; i < stop; ++i)
     {
-        size += get_size(strings[i]) - 1;
+        size += get_size(strings[i]);
     }
     char *res = malloc(size * sizeof(char) + 1);
     int pos = 0;
@@ -94,23 +189,27 @@ enum type get_type(char *str)
     else if(!my_strcmp(str, "-name"))
         return NAME;
     else if(!my_strcmp(str, "-print"))
-        return NAME;
+        return PRINT;
     else if(!my_strcmp(str, "-delete"))
-        return NAME;
+        return DELETE;
     else if(!my_strcmp(str, "-perm"))
-        return NAME;
+        return PERM;
     else if(!my_strcmp(str, "-user"))
-        return NAME;
+        return USER;
     else if(!my_strcmp(str, "-group"))
-        return NAME;
+        return GROUP;
     else if(!my_strcmp(str, "-newer"))
-        return NAME;
+        return NEWER;
     else if(!my_strcmp(str, "-exec"))
-        return NAME;
+        return EXEC;
     else if(!my_strcmp(str, "-execdir"))
-        return NAME; 
+        return EXECDIR; 
     else
-        return NOT_VALID;
+    {
+        fprintf(stderr, "myfind: prédicat inconnu « %s »", str);
+        exit(1);
+    }
+    return NOT_VALID;
 }
 
 struct node *create_node(char *type, int barre)
@@ -163,7 +262,7 @@ int add_arg(struct node *n, char *exp[], int i, int len)
         case EXEC:
         case EXECDIR:
             start = i;
-            for(; start<len && my_strcmp(exp[i], "+") && my_strcmp(exp[i], ";")\
+            for(; start<len && my_strcmp(exp[start], "+") && my_strcmp(exp[start], ";")\
                 ; ++start);
             if(start<len)
             {
@@ -177,12 +276,11 @@ int add_arg(struct node *n, char *exp[], int i, int len)
                     s = "-exec";
                 else
                     s = "-execdir";
-                fprintf(stderr, "myfind: paramètre manquant pour « %s »;", s);
+                fprintf(stderr, "myfind: paramètre manquant pour « %s ».\n", s);
                 exit(1);
             }
             break;
         default:
-                fprintf(stderr, "myfind: prédicat inconnu « %s »", exp[i-1]);
                 exit(1);
     }
     return start;
@@ -223,6 +321,7 @@ void set_error(int error_number)
 }
 struct node *build_tree(char *exp[], int len, int par, int *end)
 {
+    printf("entering build_tree len: %d\n", len);
     struct node *root = init_node();
     if(!root)
         return NULL;
@@ -230,10 +329,16 @@ struct node *build_tree(char *exp[], int len, int par, int *end)
     int gate = 0;
     int barre = 0;
     int err_number = 0;
+    printf("creating true node\n");
     for(int i = 0; i<len && !(err_number);)
     {
+        printf("on regarde %s\n", exp[i]);
         if(!strcmp(exp[i], "!"))
+        {
             barre += 1;
+            i++;
+            continue;
+        }
         if (!strcmp(exp[i], ")"))
         {
             if(barre)
@@ -262,7 +367,7 @@ struct node *build_tree(char *exp[], int len, int par, int *end)
                 err_number = 3;
                 break;
             }
-            new = build_tree(exp + i + 2, len - (i + 2), par , end);
+            new = build_tree(exp + i + 1, len - (i + 1), par , end);
             root = link_nodes(root, new, 1);
             break;
         }
@@ -272,19 +377,22 @@ struct node *build_tree(char *exp[], int len, int par, int *end)
             {
                 int add = 0;
                 new = build_tree(exp + i + 1, len - (i + 1), par + 1, &add);
-                i = i + add;
+                i = i + 1 + add; 
             }
             else
                 err_number = 4; 
-            continue;
         }
         else
         {
             new = create_node(exp[i], barre % 2);
             if(!new)
+            {
                 err_number = 6;
+                break;
+            }
             else if(i+1 < len)
                 i = add_arg(new, exp, i+1, len);
+            printf("arg is %s\n", new->arg);
         }
         root = link_nodes(root, new, 0);
         gate = 0;
