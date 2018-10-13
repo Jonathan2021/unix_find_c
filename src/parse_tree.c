@@ -392,6 +392,9 @@ struct node *build_tree(char *exp[], int len, int par, int *end)
             }
             else if(i+1 < len)
                 i = add_arg(new, exp, i+1, len);
+            else
+                i++;
+
             printf("arg is %s\n", new->arg);
         }
         root = link_nodes(root, new, 0);
