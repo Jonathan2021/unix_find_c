@@ -1,6 +1,6 @@
 #include "libraries.h"
 
-int get_size(char *str)
+int get_size(const char *str)
 {
     int i = 0;
     for(; str[i] != '\0'; ++i);

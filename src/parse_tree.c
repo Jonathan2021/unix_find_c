@@ -1,9 +1,10 @@
 #include "libraries.h"
 #include "parse_tree.h"
 #include "useful.h"
+#include "evaluations.h"
 
 //int print()
-/*
+
 int evaluate_node(struct node *node, char *path, char *file)
 {
     if(!node)
@@ -11,54 +12,46 @@ int evaluate_node(struct node *node, char *path, char *file)
         fprintf(stderr, "myfind: in evaluate_node: empty node");
         return 0;
     }
-     switch (n->type)
+     switch (node->type)
     {
         case NAME:
-                return name_match(node, file);
-                break;
-        case TYPE:
+            return name_match(node, file);
+        //case TYPE:
                 
-                break;
+          //      break;
         case PRINT:
-                return print_path(path);
-                break;
-        case EXEC:
-                break;
-        case EXECDIR:
-                break;
+            return print_path(path);
+        //case EXEC:
+          //      break;
+        //case EXECDIR:
+        //        break;
         case DELETE:
-                my_delete(path);
-                break;
+            return my_delete(path);
         case PERM:
-                perm(path, node);
-                break;
+            return perm(path, node);
         case USER:
-                return is_user(path, node);
-                break;
+            return is_user(path, node);
         case GROUP:
-                return is_group(path, n);
-                break;
+            return is_group(path, node);
         case NEWER:
-                return is_newer(path, n);
-                break;
+            return is_newer(path, node);
         case AND:
-                return (evaluate(n->left) && evaluate(n->right));
-                break;
+            return (evaluate_node(node->left, path, file) \
+            && evaluate_node(node->right, path, file));
         case OR:
-                return (evaluate(n->left) || evaluate(n->right));
-                break;
+            return (evaluate_node(node->left, path, file) || \
+            evaluate_node(node->right, path, file));
         case TRUE:
-                return 1;
-                break;
+            return 1;
         default:
-                fprintf(stderr, "myfind: in evaluate_node: type NOT_VALIDE\n");
+            fprintf(stderr, "myfind: in evaluate_node: type NOT_VALID\n");
     }
     return 0;
 }
 
 // Function to print binary tree in 2D
 // It does reverse inorder traversal
-*/
+
 void print_type(struct node *n)
 {
     switch (n->type)
@@ -177,7 +170,7 @@ void free_tree(struct node *root)
     if(!root)
         return;
     if(root->arg)
-        free(root->arg);
+        free((char *)root->arg);
     free_tree(root->left);
     free_tree(root->right);
     free(root);
@@ -266,8 +259,8 @@ int add_arg(struct node *n, char *exp[], int i, int len)
         case EXEC:
         case EXECDIR:
             start = i;
-            for(; start<len && my_strcmp(exp[start], "+") && my_strcmp(exp[start], ";")\
-                ; ++start);
+            for(; start<len && my_strcmp(exp[start], "+") && \
+                my_strcmp(exp[start], ";"); ++start);
             if(start<len)
             {
                 n->arg = append_strings(exp, i, start);
@@ -297,20 +290,20 @@ void set_error(int error_number)
     {
         case 1:
             perror("myfind: expression non valide; « ( »  attendue mais \
-            non détectée.\n");
+non détectée.\n");
             break;
         case 2: 
             perror("myfind: expression non valide ; vous avez utilisé un \
-            opérateur binaire « -a » non précédé d'une expression.\n");
+opérateur binaire « -a » non précédé d'une expression.\n");
             break;
         case 3:
             perror("myfind: expression non valide ; vous avez utilisé un \
-            opérateur binaire « -o » non précédé d'une expression.\n");
+opérateur binaire « -o » non précédé d'une expression.\n");
             break;
         case 4:
             perror("myfind: expression non valide. « ) » était attendue m\
-            ais n'a pas été détectée. Peut-être faut-il un autre prédicat \
-            après « ( ».\n");
+ais n'a pas été détectée. Peut-être faut-il un autre prédicat \
+après « ( ».\n");
             break;
         case 5:
             perror("bash: erreur de syntaxe près du symbole inattendu « \
@@ -326,7 +319,6 @@ void set_error(int error_number)
 }
 struct node *build_tree(char *exp[], int len, int par, int *end)
 {
-    printf("entering build_tree len: %d\n", len);
     struct node *root = init_node();
     if(!root)
         return NULL;
@@ -334,10 +326,10 @@ struct node *build_tree(char *exp[], int len, int par, int *end)
     int gate = 0;
     int barre = 0;
     int err_number = 0;
-    printf("creating true node\n");
+    //printf("creating true node\n");
     for(int i = 0; i<len && !(err_number);)
     {
-        printf("on regarde %s\n", exp[i]);
+       // printf("on regarde %s\n", exp[i]);
         if(!strcmp(exp[i], "!"))
         {
             barre += 1;
@@ -351,7 +343,7 @@ struct node *build_tree(char *exp[], int len, int par, int *end)
             else if(par)
             {
                 *end += i+1;
-                printf("je trouve une parenthese fermante et renvoie la position %d\n", *end);
+               // printf("je trouve une parenthese fermante et renvoie la position %d\n", *end);
             }
             else
                 err_number = 1;
@@ -388,7 +380,7 @@ struct node *build_tree(char *exp[], int len, int par, int *end)
                 int add = 0;
                 new = build_tree(exp + i + 1, len - (i + 1), par + 1, &add);
                 i = i + 1 + add;
-                printf("je reprend à la position %d\n", i);
+                //printf("je reprend à la position %d\n", i);
             }
             else {
                 err_number = 4; 
@@ -407,8 +399,6 @@ struct node *build_tree(char *exp[], int len, int par, int *end)
                 i = add_arg(new, exp, i+1, len);
             else
                 i++;
-
-            printf("arg is %s\n", new->arg);
         }
         root = link_nodes(root, new, 0);
         gate = 0;

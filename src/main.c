@@ -141,6 +141,7 @@ int main(int argc, char *argv[])
     int end = 0;
     struct node *expr = build_tree(argv + 2, argc - 2, 0, &end);
     print2D(expr);
+    printf("evaluated %d\n", evaluate_node(expr, "foo/baz", "baz"));
     free_tree(expr);
     //struct cmd *commands = get_commands();
     //struct cmd_arg *args= parse_arg(1, argc, argv);
