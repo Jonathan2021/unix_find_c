@@ -145,6 +145,7 @@ struct node *init_node(void)
     res->arg = NULL;
     res->left = NULL;
     res->right = NULL;
+    res->is_plus = 0;
     res->type = NOT_VALID;
     return res;
 }
@@ -176,7 +177,7 @@ void free_tree(struct node *root)
     if(!root)
         return;
     if(root->arg)
-        free((char*)root->arg);
+        free(root->arg);
     free_tree(root->left);
     free_tree(root->right);
     free(root);
@@ -269,8 +270,8 @@ int add_arg(struct node *n, char *exp[], int i, int len)
                 ; ++start);
             if(start<len)
             {
-                ++start;
                 n->arg = append_strings(exp, i, start);
+                n->is_plus = *exp[start];
             }
             else
             {
@@ -388,10 +389,8 @@ struct node *build_tree(char *exp[], int len, int par, int *end)
                 i = i + 1 + add;
                 printf("je reprend à la position %d\n", i);
             }
-            else {
+            else
                 err_number = 4; 
-                break;
-            }
         }
         else
         {
