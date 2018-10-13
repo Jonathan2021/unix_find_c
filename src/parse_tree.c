@@ -390,8 +390,10 @@ struct node *build_tree(char *exp[], int len, int par, int *end)
                 i = i + 1 + add;
                 printf("je reprend à la position %d\n", i);
             }
-            else
+            else {
                 err_number = 4; 
+                break;
+            }
         }
         else
         {
