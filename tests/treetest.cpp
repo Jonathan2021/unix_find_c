@@ -322,24 +322,27 @@ void outputNode(struct node* node, stringvector &strings) {
   }
   switch (node->type) {
     default: error("Unexpected type");
-    case AND:
+    case AND: {
+      bool leftParens = node->left->type == OR;
+      bool rightParens = node->right->type == OR;
+      if (leftParens)
+        strings.push_back("(");
       outputNode(node->left, strings);
+      if (leftParens)
+        strings.push_back(")");
+      if (rightParens)
+        strings.push_back("(");
+      outputNode(node->right, strings);
+      if (rightParens)
+        strings.push_back(")");
+      break;
+    }
+    case OR: {
+      outputNode(node->left, strings);
+      strings.push_back("-o");
       outputNode(node->right, strings);
       break;
-    case OR:
-      bool leftParens = node->left->type == AND;
-      bool rightParens = node->right->type == AND;
-      if (leftParens)
-        strings.push_back("(");
-      outputNode(node->left, strings);
-      if (leftParens)
-        strings.push_back(")");
-      strings.push_back("-o");
-      if (rightParens)
-        strings.push_back("(");
-      outputNode(node->right, strings);
-      if (rightParens)
-        strings.push_back(")");
+    }
   }
 }
 
