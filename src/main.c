@@ -1,167 +1,183 @@
-#include "libraries.h"
-#include "cmd.h"
-#include "useful.h"
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include "settings.h"
 #include "parse_tree.h"
+#include "useful.h"
 
-void append_string(char *dest, char *first, char *second)
-{
-    int i = 0;
-    int j = 0;
-    for(; first[i] != '\0'; ++i)
-        dest[i] = first[i];
-    for(; second[j] != '\0'; ++j)
-        dest[i+j] = second[j];
-    dest[i+j] = '\0';
-}
+void split(const char *file, char** path, char** name) {
+    // Find last slash that has a non-slash after it.
+    // Anything after len is a slash.
+    int len = get_size(file) - 1;
+    while (len > 1 && file[len - 1] == '/')
+        --len;
 
-struct cmd_arg *parse_arg(int start, int end, char *argv[])
-{
-    if(start == end)
-        return NULL;
-    struct cmd_arg *first_arg= malloc(sizeof(struct cmd_arg));
-    if(!first_arg)
-        return NULL;
-    first_arg->arg = argv[start++];
-    first_arg->next = NULL;
-    struct cmd_arg *cur = first_arg;
-    for(; start<end; ++start)
-    {
-        struct cmd_arg *add = malloc(sizeof(struct cmd_arg));
-        if(!add)
+    // Get this annoying case of all slashes out of the way first.
+    if (len == 1 && file[0] == '/') { // Eg: /
+        *name = my_strdup("/");
+        if (file[1] == '/') // Eg: //
+            *path = my_strdup(file + 1);
+        else
+            *path = my_strdup("/");
+        return;
+    }
+
+    // Eg: a/b////
+    //        ^ len
+    // Want to return:
+    //   path = a
+    //   file = b////
+
+    int slash = -1;
+    for (int i = len; i; --i) {
+        if (file[i-1] == '/') {
+            slash = i - 1;
             break;
-        add->next = NULL;
-        add->arg = argv[start];
-        cur->next = add;
-        cur = add;
-    }
-    return first_arg;
-}
-
-void fix_path(char *str)
-{
-    int has_slash = 0;
-    int i = 0;
-    for(; str[i] != '\0'; ++i)
-    {
-        if(str[i] == '/' && str[i+1] == '\0')
-        {
-            has_slash = 1;
         }
     }
-    if(!has_slash)
-    {
-        str[i] = '/';
-        str[i+1] = '\0';
+
+    if (slash < 0) { // No slash, eg: abc
+        *path = my_strdup(".");
+        *name = my_strdup(file);
+        return;
     }
+
+    if (!slash) { // Eg: /abc
+        *path = my_strdup("/");
+        *name = my_strdup(file + 1);
+        return;
+    }
+
+    // Eg: abc/def 
+    *path = my_strdup(file);
+    (*path)[slash] = 0;
+    *name = my_strdup(file + slash + 1);
 }
 
-int my_print(DIR *dir, char *str)
-{
-    int res = 0;
-    struct dirent *de;
-    dir = opendir(str);
-    if(!dir)
-    {
-        fprintf(stderr, "myfind: cannot do opendir(%s): can't open directory\n"\
-        ,str);
-        res = 1;
-        return res;
+void search(const char *file, struct node* expr, struct Settings settings,
+  int top_level) {
+    char *path, *name;
+    split(file, &path, &name);
+
+    evaluate_node(expr, path, name);
+
+    // If this a directory, recurse into it.
+    // FIXME: Might get into infinite loop when following symlinks.
+
+    // Decide whether to follow symlinks.
+    int follow = 0;
+    if (settings.symlinkPolicy == FOLLOW_NONE ||
+      (settings.symlinkPolicy == FOLLOW_ARGS && !top_level))
+        follow = O_NOFOLLOW;
+
+    int fd = open(file, follow | O_RDONLY);
+    if (fd < 0) {
+        if (errno != ELOOP) // Don't exit if symlink we didn't follow.
+            fail(file);
+        goto out;
     }
-    printf("%s\n", str);
-    fix_path(str);
-    while( (de = readdir(dir)) != NULL)
-    {
-        if(my_strcmp(de->d_name, ".") && my_strcmp(de->d_name, ".."))
-        {
-           // printf("\nreading %s\n", de->d_name);
-            if(de->d_type == DT_DIR)
-            {
-             //   printf("\nis dir %s\n", de->d_name);
-                char *arg = malloc((get_size(str)  + get_size(de->d_name))*\
-                sizeof(char) +1);
-                append_string(arg, str, de->d_name);
-                res += my_print(dir, arg);
-            }
-            else
-                printf("%s%s\n", str, de->d_name);
+
+    // Is it a directory?
+    struct stat statbuf;
+    if (fstat(fd, &statbuf) < 0)
+        fail("stat");
+    if (!S_ISDIR(statbuf.st_mode))
+        goto nodir;
+
+    // It is.  Loop through the contents.
+    DIR* dir = fdopendir(fd);
+    if (!dir)
+        fail("fdopendir");
+
+    do {
+        struct dirent *ent;
+        errno = 0;
+        ent = readdir(dir);
+        if (!ent) {
+           if (errno)
+              fail("readdir");
+           break;
         }
-    }
-    //if(!de)
-    //{
-    //    printf("\n de is empty in %s\n", str);
-    //}
-    free(str);
+        if (!my_strcmp(ent->d_name, "."))
+            continue;
+        if (!my_strcmp(ent->d_name, ".."))
+            continue;
+
+        // Form "file/d_name".
+        int file_len = get_size(file) - 1;
+        int d_name_len = get_size(ent->d_name) - 1;
+        char *newfile = malloc(file_len + d_name_len + 2);
+        if (!newfile)
+            fail("malloc");
+        int target = 0;
+        for (int i = 0; i < file_len; ++i)
+            newfile[target++] = file[i];
+        if (file[file_len - 1] != '/')
+            newfile[target++] = '/';
+        for (int i = 0; i < d_name_len; ++i)
+            newfile[target++] = ent->d_name[i];
+        newfile[target++] = 0;
+        search(newfile, expr, settings, 0);
+        free(newfile);
+    } while (1);
+
     closedir(dir);
-    return res;
+nodir:
+    close(fd);
+out:
+    free(name);
+    free(path);
 }
 
-/*
-int open_dir(DIR *dir, const char *)
-{
-    dir = opendir(str);
-    if(!dir)
-    {
-        fprintf(stderr, "myfind: cannot do opendir(%s): can't open directory",\
-        str);
-        return 1;
-    }
-    return 0;
-}
-*/
-
-int print(struct cmd_arg *args)
-{
-    DIR *dir = NULL;
-    int error = 0;
-    if(!args)
-    {
-        args = malloc(sizeof(struct cmd_arg));
-        args->next = NULL;
-        args->arg = ".";
-    }
-    for(; args; args = args->next)
-    {
-        char *arg = malloc(get_size(args->arg) * sizeof(char) + 1);
-        append_string(arg, args->arg, "");
-        error = my_print(dir, arg);
-    }
-    return (error > 0);
-}
-
-struct cmd *get_commands(void)
-{
-    struct cmd *commands = malloc(1 * sizeof(struct cmd));
-    commands[0].handle= print;
-    commands[0].command_name = "print";
-    return commands;
-}
-
-int get_expresion(char **res, char *argv[], int argc);
-{
-    for(int i = 0; i < argc && my_strcmp(argv[i] , "(") && *argv[i] != '-'\
-    ; ++i);
-    if(i<argc)
-    {
-        res = argv + i;
-        return i;
-    }
-}
 int main(int argc, char *argv[])
 {
-    char **expression;
-    int expr_len = argc - get_expression(expression, argv, argc);
+    struct Settings settings = { FOLLOW_NONE };
+    int first_non_option, first_expression;
+
+    for (first_non_option = 1; first_non_option < argc; ++first_non_option) {
+        const char* opt = argv[first_non_option];
+
+        if (!my_strcmp(opt, "-P"))
+            settings.symlinkPolicy = FOLLOW_NONE;
+        else if (!my_strcmp(opt, "-H"))
+            settings.symlinkPolicy = FOLLOW_ARGS;
+        else if (!my_strcmp(opt, "-L"))
+            settings.symlinkPolicy = FOLLOW_ALL;
+        else if (!my_strcmp(opt, "--")) {
+            // Next argument is the first non-option argument.
+            ++first_non_option;
+            break;
+        } else
+            // This argument is the first non-option argument.
+            break;
+    }
+
+    for (first_expression = first_non_option; first_expression < argc;
+      ++first_expression) {
+        const char* opt = argv[first_expression];
+
+        if (!my_strcmp(opt, "!")) // Expression.
+            break;
+        if (!my_strcmp(opt, "(")) // Expression.
+            break;
+
+        if (opt[0] == '-' && opt[1]) // Eg -print (but not just '-')
+            break;
+    }
+
     int end = 0;
-    struct node *expr = build_tree(expression, expr_len, 0, &end);
-    print2D(expr);
-    printf("evaluated %d\n", evaluate_node(expr, "foo/baz", "baz"));
-    free_tree(expr);
-    //struct cmd *commands = get_commands();
-    //struct cmd_arg *args= parse_arg(1, argc, argv);
-    //return commands[0].handle(args);
+    struct node* expr = build_tree(argv + first_expression,
+      argc - first_expression, 0, &end);
+    //print2D(expr);
+
+    for (int i = first_non_option; i < first_expression; ++i)
+        search(argv[i], expr, settings, 1);
+    if (first_non_option == first_expression) // No files?  Use .
+        search(".", expr, settings, 1);
+
+    return 0;
 }
-/*
-int call_command(const char *str, const char **arg)
-{
-    size_t nb
-}
-*/

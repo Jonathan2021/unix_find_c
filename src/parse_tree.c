@@ -20,7 +20,7 @@ int evaluate_node(struct node *node, char *path, char *file)
         case TYPE:
             return (node->barre) ? !my_type(node, path) : my_type(node, path);
         case PRINT:
-            return (node->barre) ? !print_path(path) : print_path(path);
+            return (node->barre) ? !print_path(path, file) : print_path(path, file);
         case EXEC:
             return (node->barre) ? !my_exec(node, path) : my_exec(node, path);
         case EXECDIR:

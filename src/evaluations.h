@@ -4,7 +4,7 @@
 #include "parse_tree.h"
 
 int my_delete(char *path);
-int print_path(char *path);
+int print_path(char *path, char *file);
 int name_match(struct node *n, char *file_name);
 int perm(char *path, struct node *n);
 int is_user(char *path, struct node *n);

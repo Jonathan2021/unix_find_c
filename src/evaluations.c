@@ -12,9 +12,12 @@ n'est pas vide\n", path);
     return !res;
 }
 
-int print_path(char *path)
+int print_path(char *path, char *file)
 {
-    printf("%s\n", path);
+    if (!my_strcmp(path, "."))
+        printf("%s\n", file);
+    else
+        printf("%s/%s\n", path, file);
     return 1;
 }
 
