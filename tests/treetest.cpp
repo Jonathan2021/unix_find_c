@@ -139,8 +139,8 @@ void initState(struct LeafGenState *state) {
 int numVariants(enum type type) {
   switch (type) {
     default: error("Unexpected type");
-    case   TYPE: return 3;
-    case   NAME: return 3;
+    case   TYPE: return 2;
+    case   NAME: return 4;
     case   PRINT: return 1;
     case EXECDIR:
     case    EXEC: return 1;
@@ -148,7 +148,7 @@ int numVariants(enum type type) {
     case    PERM: return 7;
     case    USER: return 2;
     case   GROUP: return 2;
-    case   NEWER: return 2;
+    case   NEWER: return 1;
     case    TRUE: return 1;
   }
 }
@@ -158,7 +158,6 @@ void setTYPEArg(const char** arg, int variant) {
     default: error("Invalid variant");
     case  0: *arg = "f"; break;
     case  1: *arg = "d"; break;
-    case  2: *arg = "z"; break;
   }
 }
 
@@ -167,7 +166,8 @@ void setNAMEArg(const char** arg, int variant) {
     default: error("Invalid variant");
     case  0: *arg = "-hello"; break;
     case  1: *arg = "there"; break;
-    case  2: *arg = "with space"; break;
+    case  2: *arg = "(left"; break;
+    case  3: *arg = "right)"; break;
   }
 }
 
@@ -229,7 +229,6 @@ void setNEWERArg(const char** arg, int variant) {
   switch (variant) {
     default: error("Invalid variant");
     case  0: *arg = "somefile"; break;
-    case  1: *arg = "space in name"; break;
   }
 }
 
