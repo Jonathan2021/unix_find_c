@@ -136,10 +136,22 @@ struct cmd *get_commands(void)
     return commands;
 }
 
+int get_expresion(char **res, char *argv[], int argc);
+{
+    for(int i = 0; i < argc && my_strcmp(argv[i] , "(") && *argv[i] != '-'\
+    ; ++i);
+    if(i<argc)
+    {
+        res = argv + i;
+        return i;
+    }
+}
 int main(int argc, char *argv[])
 {
+    char **expression;
+    int expr_len = argc - get_expression(expression, argv, argc);
     int end = 0;
-    struct node *expr = build_tree(argv + 2, argc - 2, 0, &end);
+    struct node *expr = build_tree(expression, expr_len, 0, &end);
     print2D(expr);
     printf("evaluated %d\n", evaluate_node(expr, "foo/baz", "baz"));
     free_tree(expr);
