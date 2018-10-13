@@ -1,18 +1,33 @@
 CC ?= gcc
-CFLAGS = -std=c99 -pedantic -Werror -Wall -Wextra
-SRC = src/*.c
-OBJ = {SRC:.c=.o}
+CXX ?= g++
+FLAGS =-pedantic -Werror -Wall -Wextra -g
+CFLAGS = -std=c99 $(FLAGS)
+CXXFLAGS = $(FLAGS)
+SRC = $(wildcard src/*.c)
+OBJ = $(SRC:.c=.o)
+TESTOBJ = treetest.o $(filter-out src/main.o, $(OBJ))
 BIN = myfind
 
 .PHONY: clean all test
 
 all: $(BIN)
 
-$(BIN): $(SRC)
-	$(CC) $(CFLAGS) -o $(@) $(SRC)
+%.o: src/%.c
+	$(CC) -c -o $@ $< $(CFLAGS)
 
-test: $(BIN)
+%.o: tests/%.cpp
+	$(CXX) -c -o $@ $< $(CXXFLAGS)
+
+$(BIN): $(OBJ)
+	$(CC) $(CFLAGS) -o $@ $^
+
+treetest: $(TESTOBJ)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+test: $(BIN) treetest
+	./treetest
 	./tests/tests.sh
 
 clean:
 	$(RM) $(BIN)
+	$(RM) $(OBJ) $(TESTOBJ)

@@ -23,7 +23,7 @@ struct node
 {
     int barre;
     enum type type;
-    char *arg;
+    const char *arg;
     struct node *left; 
     struct node *right;
 };

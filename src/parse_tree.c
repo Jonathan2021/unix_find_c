@@ -176,7 +176,7 @@ void free_tree(struct node *root)
     if(!root)
         return;
     if(root->arg)
-        free(root->arg);
+        free((char*)root->arg);
     free_tree(root->left);
     free_tree(root->right);
     free(root);
@@ -388,8 +388,10 @@ struct node *build_tree(char *exp[], int len, int par, int *end)
                 i = i + 1 + add;
                 printf("je reprend à la position %d\n", i);
             }
-            else
+            else {
                 err_number = 4; 
+                break;
+            }
         }
         else
         {
