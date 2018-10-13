@@ -1,6 +1,6 @@
 CC ?= gcc
 CXX ?= g++
-FLAGS =-pedantic -Werror -Wall -Wextra
+FLAGS =-pedantic -Werror -Wall -Wextra -g
 CFLAGS = -std=c99 $(FLAGS)
 CXXFLAGS = $(FLAGS)
 SRC = $(wildcard src/*.c)
