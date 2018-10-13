@@ -140,7 +140,7 @@ char **get_args(struct node* n, char *path)
     int j = 0;
     int size;
     int is_replaced;
-    char **res = malloc((n->elements + 1) * sizeof(char *));
+    char **res = calloc(n->elements + 1, sizeof(char *));
     for(int i = 0; i < n->elements; ++i)
     {
         is_replaced = 0;
@@ -148,7 +148,7 @@ char **get_args(struct node* n, char *path)
             size = get_size(path);
         else
             size = get_size(n->arg + j);
-        char *new_arg = malloc(size * sizeof(char));
+        char *new_arg = malloc(size);
         for(int k = 0; n->arg[j] != '\0'; ++j)
         {
             if(!is_replaced)
