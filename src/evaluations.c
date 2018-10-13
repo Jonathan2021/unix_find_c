@@ -125,5 +125,9 @@ int is_newer(char *path, struct node *n)
     return (buf_path.st_mtime > buf_compare.st_mtime);
 }
 
+int my_exec(struct node *n, char * path)
+{
+
+}
 //int exec(char *to_exec)i
 */

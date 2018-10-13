@@ -27,7 +27,7 @@ int evaluate_node(struct node *node, char *path, char *file)
         case EXECDIR:
                 break;
         case DELETE:
-                delete(path);
+                my_delete(path);
                 break;
         case PERM:
                 perm(path, node);
@@ -186,6 +186,8 @@ enum type get_type(char *str)
 {
     if(!my_strcmp(str, "-type"))
         return TYPE;
+    if(!my_strcmp(str, "-true"))
+        return TRUE;
     else if(!my_strcmp(str, "-name"))
         return NAME;
     else if(!my_strcmp(str, "-print"))
@@ -248,6 +250,7 @@ int add_arg(struct node *n, char *exp[], int i, int len)
     {
         case PRINT:
         case DELETE:
+        case TRUE:
             n->arg = NULL;
             return i;
         case PERM:
