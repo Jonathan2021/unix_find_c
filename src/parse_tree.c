@@ -15,26 +15,27 @@ int evaluate_node(struct node *node, char *path, char *file)
      switch (node->type)
     {
         case NAME:
-            return name_match(node, file);
+            return (node->barre) ? !name_match(node, file) : \
+            name_match(node, file);
         //case TYPE:
                 
           //      break;
         case PRINT:
-            return print_path(path);
+            return (node->barre) ? !print_path(path) : print_path(path);
         //case EXEC:
           //      break;
         //case EXECDIR:
         //        break;
         case DELETE:
-            return my_delete(path);
+            return (node->barre) ? !my_delete(path) : my_delete(path);
         case PERM:
-            return perm(path, node);
+            return (node->barre) ? !perm(path, node) : perm(path,node);
         case USER:
-            return is_user(path, node);
+            return (node->barre) ? !is_user(path, node) : is_user(path, node);
         case GROUP:
-            return is_group(path, node);
+            return (node->barre) ? !is_group(path, node) : is_group(path, node);
         case NEWER:
-            return is_newer(path, node);
+            return (node->barre) ? !is_newer(path, node) : is_newer(path, node);
         case AND:
             return (evaluate_node(node->left, path, file) \
             && evaluate_node(node->right, path, file));
