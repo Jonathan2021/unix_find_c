@@ -36,6 +36,8 @@ int strictlyEquivalent(struct node* left, struct node* right) {
     return 0;
   if (left->barre != right->barre)
     return 0;
+  if (left->is_plus != right->is_plus)
+    return 0;
   if (left->type != right->type)
     return 0;
   if ((!left->arg) != (!right->arg))
@@ -128,12 +130,11 @@ struct LeafGenState {
   enum type nextType;
   int nextBarre;
   int nextVariant;
+  char nextIsPlus;
 };
 
 void initState(struct LeafGenState *state) {
-  state->nextType = (enum type)0;
-  state->nextBarre = 0;
-  state->nextVariant = 0;
+  memset(state, 0, sizeof(struct LeafGenState));
 }
 
 int numVariants(enum type type) {
@@ -267,9 +268,11 @@ struct node* generateLeaf(struct LeafGenState *state) {
       break;
     case EXEC:
       setEXECArg(&node->arg, state->nextVariant);
+      node->is_plus = state->nextIsPlus;
       break;
     case EXECDIR:
       setEXECDIRArg(&node->arg, state->nextVariant);
+      node->is_plus = state->nextIsPlus;
       break;
     case DELETE:
       setDELETEArg(&node->arg, state->nextVariant);
@@ -297,9 +300,17 @@ struct node* generateLeaf(struct LeafGenState *state) {
     state->nextVariant = 0;
     state->nextBarre = !state->nextBarre;
     if (!state->nextBarre) {
-      do {
-        state->nextType = (enum type)(1+(int)state->nextType);
-      } while (!isLeaf(state->nextType));
+      if (state->nextIsPlus == ';') {
+        state->nextIsPlus = '+';
+      } else {
+        state->nextIsPlus = 0;
+        do {
+          state->nextType = (enum type)(1+(int)state->nextType);
+        } while (!isLeaf(state->nextType));
+        if (state->nextType == EXEC || state->nextType == EXECDIR) {
+          state->nextIsPlus = ';';
+        }
+      }
     }
   }
 
@@ -309,6 +320,8 @@ struct node* generateLeaf(struct LeafGenState *state) {
 typedef std::vector<std::string> stringvector;
 
 void outputLeaf(struct node* node, stringvector &strings) {
+  char is_plus[2];
+
   if (node->barre)
     strings.push_back("!");
 
@@ -328,12 +341,18 @@ void outputLeaf(struct node* node, stringvector &strings) {
     case EXEC:
       strings.push_back("-exec");
       strings.push_back(node->arg);
-      strings.push_back(";");
+      assert(node->is_plus);
+      is_plus[0] = node->is_plus;
+      is_plus[1] = 0;
+      strings.push_back(is_plus);
       break;
     case EXECDIR:
       strings.push_back("-execdir");
       strings.push_back(node->arg);
-      strings.push_back(";");
+      assert(node->is_plus);
+      is_plus[0] = node->is_plus;
+      is_plus[1] = 0;
+      strings.push_back(is_plus);
       break;
     case DELETE:
       strings.push_back("-delete");
