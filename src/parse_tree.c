@@ -17,15 +17,15 @@ int evaluate_node(struct node *node, char *path, char *file)
         case NAME:
             return (node->barre) ? !name_match(node, file) : \
             name_match(node, file);
-        //case TYPE:
-                
-          //      break;
+        case TYPE:
+            return (node->barre) ? !my_type(node, path) : my_type(node, path);
         case PRINT:
             return (node->barre) ? !print_path(path) : print_path(path);
         case EXEC:
             return (node->barre) ? !my_exec(node, path) : my_exec(node, path);
-        //case EXECDIR:
-        //        break;
+        case EXECDIR:
+            return (node->barre) ? !my_execdir(node, path, file) \
+            : my_execdir(node, path, file);
         case DELETE:
             return (node->barre) ? !my_delete(path) : my_delete(path);
         case PERM:

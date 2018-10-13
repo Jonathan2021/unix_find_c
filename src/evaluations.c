@@ -198,3 +198,69 @@ int my_exec(struct node *n, char *path)
         return 1;
     return res;
 }
+
+int my_execdir(struct node *n, char *path, char *file)
+{
+    int res = 0;
+    char *new_path = malloc(2 + get_size(file));
+    append_string(new_path, "./", file);
+    if(n->is_plus != '+' && n->is_plus != ';')
+    {
+        fprintf(stderr, "myfind: -execdir: expected + or ;");
+    }
+    pid_t pid = fork();
+    if(pid == -1)
+    {
+        fprintf(stderr, "myfind: -exec: fork failed\n");
+    }
+    if(!pid)
+    {
+        chdir(path);
+        char **args = get_args(n, new_path);
+        if(execvp(n->arg, args)  < 0)
+        {
+            fprintf(stderr,"execvp failed\n");
+            exit(1);
+        }
+    }
+    else
+    {
+        int wstatus;
+        waitpid(pid, &wstatus, 0);
+        if(!WIFEXITED(wstatus))
+            return 0;
+        res = !WEXITSTATUS(wstatus);
+    }
+    free(new_path);
+    if(n->is_plus == '+')
+        return 1;
+    return res;
+
+}
+
+int my_type(struct node *n, char *path)
+{
+    struct stat buf;
+    if(stat(path, &buf))
+    {
+        fprintf(stderr, "myfind: -type: couldn't get stat of %s\n", path);
+    }
+    mode_t mode = buf.st_mode;
+    if(!my_strcmp(n->arg, "b"))
+        return (mode & S_IFBLK);
+    if(!my_strcmp(n->arg, "c"))
+        return (mode & S_IFCHR);
+    if(!my_strcmp(n->arg, "d"))
+        return (mode & S_IFDIR);
+    if(!my_strcmp(n->arg, "f"))
+        return (mode & S_IFREG);
+    if(!my_strcmp(n->arg, "l"))
+        return (mode & S_IFLNK);
+    if(!my_strcmp(n->arg, "p"))
+        return (mode & S_IFIFO);
+    if(!my_strcmp(n->arg, "s"))
+        return (mode & S_IFSOCK);
+    else
+        fprintf(stderr, "myfind: -type: invalide type %s\n", n->arg);
+    return 0;
+}
