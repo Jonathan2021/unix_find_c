@@ -25,8 +25,8 @@ treetest: $(TESTOBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 test: $(BIN) treetest
+	./runtests.sh
 	./treetest
-	./tests/tests.sh
 
 clean:
 	$(RM) $(BIN)
