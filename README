@@ -1,0 +1,2 @@
+./myfind [options] [files] [expressions]
+-exec(dir) {} + not yet implemented
