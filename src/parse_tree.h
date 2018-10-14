@@ -30,10 +30,12 @@ struct node
     int elements;
 };
 
-struct node *build_tree(char *exp[], int len, int par, int *end);
+struct node *build_tree(char *exp[], int len, int par, int *end, int *print);
 void free_tree(struct node *root);
 void print2D(struct node *root);
 int evaluate_node(struct node *n, char *path, char *file);
+struct node *link_nodes(struct node *left, struct node *right, int type);
+struct node *init_node(void);
 
 typedef int (*node_handler)(struct node);
 

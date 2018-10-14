@@ -170,8 +170,15 @@ int main(int argc, char *argv[])
     }
 
     int end = 0;
-    struct node* expr = build_tree(argv + first_expression,
-      argc - first_expression, 0, &end);
+    int print = 0;
+    struct node* expr = build_tree(argv + first_expression, \
+    argc - first_expression, 0, &end, &print);
+    if(!print)
+    {
+        struct node *print_node = init_node();
+        print_node->type = PRINT;
+        expr = link_nodes(expr, print_node, 0);
+    }
     //print2D(expr);
 
     for (int i = first_non_option; i < first_expression; ++i)

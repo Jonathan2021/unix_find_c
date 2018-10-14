@@ -3,19 +3,19 @@
 #include "useful.h"
 #include "evaluations.h"
 
-int my_delete(char *path)
+int my_delete(char *full_name)
 {
-    int res = unlink(path);
+    int res = unlink(full_name);
     if(res == -1)
         fprintf(stderr, "myfind: impossible de supprimer '%s': Le dossier \
-n'est pas vide\n", path);
+n'est pas vide\n", full_name);
     return !res;
 }
 
 int print_path(char *path, char *file)
 {
     if (!my_strcmp(path, "."))
-        printf("%s\n", file);
+        printf("./%s\n", file);
     else
         printf("%s/%s\n", path, file);
     return 1;
@@ -70,7 +70,6 @@ int perm(char *path, struct node *n)
     char tag = 0;
     if(!get_perm(n->arg, &tag, all_perm))
         exit(1);
-    printf("my perm: %d%d%d\n", all_perm[0], all_perm[1], all_perm[2]);
     if(stat(path, &buf))
     {
         fprintf(stderr, "myfind: in -perm: couldn't get stat of %s\n", path);
@@ -78,9 +77,6 @@ int perm(char *path, struct node *n)
     }
     mode_t mode = 64 * all_perm[0] + 8 * all_perm[1] + all_perm[2];
     mode_t file_mode = buf.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
-    printf("mode : %d\n", mode);
-    printf("file_mode : %d\n", file_mode);
-    printf("tag is %c\n",tag);
     if(tag == '-')
         return ((file_mode & mode) == mode);
     else if(tag == '/' || tag == '+')
@@ -245,12 +241,12 @@ int my_execdir(struct node *n, char *path, char *file)
 
 }
 
-int my_type(struct node *n, char *path)
-{
+int my_type(struct node *n, char *full_name)
+{ 
     struct stat buf;
-    if(stat(path, &buf))
+    if(stat(full_name, &buf))
     {
-        fprintf(stderr, "myfind: -type: couldn't get stat of %s\n", path);
+        fprintf(stderr, "myfind: -type: couldn't get stat of %s\n", full_name);
     }
     mode_t mode = buf.st_mode;
     if(!my_strcmp(n->arg, "b"))
@@ -269,5 +265,6 @@ int my_type(struct node *n, char *path)
         return (mode & S_IFSOCK);
     else
         fprintf(stderr, "myfind: -type: invalide type %s\n", n->arg);
+    
     return 0;
 }

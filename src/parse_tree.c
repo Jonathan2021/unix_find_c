@@ -7,47 +7,64 @@
 
 int evaluate_node(struct node *node, char *path, char *file)
 {
+    int res = 0;
+    //printf("file is:%s\n", file);
     if(!node)
     {
         fprintf(stderr, "myfind: in evaluate_node: empty node");
         return 0;
     }
-     switch (node->type)
+    char *full_name = get_fullpath(path, file);
+    switch (node->type)
     {
         case NAME:
-            return (node->barre) ? !name_match(node, file) : \
-            name_match(node, file);
+            res = name_match(node, file);
+            break;
         case TYPE:
-            return (node->barre) ? !my_type(node, path) : my_type(node, path);
+            res = my_type(node, full_name);
+            break;
         case PRINT:
-            return (node->barre) ? !print_path(path, file) : print_path(path, file);
+            res = print_path(path, file);
+            break;
         case EXEC:
-            return (node->barre) ? !my_exec(node, path) : my_exec(node, path);
+            res = my_exec(node, full_name);
+            break;
         case EXECDIR:
-            return (node->barre) ? !my_execdir(node, path, file) \
-            : my_execdir(node, path, file);
+            res = my_execdir(node, full_name, file);
+            break;
         case DELETE:
-            return (node->barre) ? !my_delete(path) : my_delete(path);
+            res = my_delete(full_name);
+            break;
         case PERM:
-            return (node->barre) ? !perm(path, node) : perm(path,node);
+            res = perm(full_name, node);
+            break;
         case USER:
-            return (node->barre) ? !is_user(path, node) : is_user(path, node);
+            res = is_user(full_name, node);
+            break;
         case GROUP:
-            return (node->barre) ? !is_group(path, node) : is_group(path, node);
+            res = is_group(full_name, node);
+            break;
         case NEWER:
-            return (node->barre) ? !is_newer(path, node) : is_newer(path, node);
+            res = is_newer(full_name, node);
+            break;
         case AND:
+            free(full_name);
             return (evaluate_node(node->left, path, file) \
             && evaluate_node(node->right, path, file));
         case OR:
+            free(full_name);
             return (evaluate_node(node->left, path, file) || \
             evaluate_node(node->right, path, file));
         case TRUE:
+            free(full_name);
             return 1;
         default:
+            free(full_name);
             fprintf(stderr, "myfind: in evaluate_node: type NOT_VALID\n");
+            return 0;
     }
-    return 0;
+    free(full_name);
+    return (node->barre) ? !res : res;
 }
 
 // Function to print binary tree in 2D
@@ -247,7 +264,6 @@ int add_arg(struct node *n, char *exp[], int i, int len)
         case PRINT:
         case DELETE:
         case TRUE:
-            n->arg = NULL;
             return i;
         case PERM:
         case GROUP:
@@ -319,7 +335,7 @@ après « ( ».\n");
     }
     exit(1);
 }
-struct node *build_tree(char *exp[], int len, int par, int *end)
+struct node *build_tree(char *exp[], int len, int par, int *end, int *print)
 {
     struct node *root = init_node();
     if(!root)
@@ -371,7 +387,7 @@ struct node *build_tree(char *exp[], int len, int par, int *end)
             }
             if(par)
                 *end += i + 1;
-            new = build_tree(exp + i + 1, len - (i + 1), par , end);
+            new = build_tree(exp + i + 1, len - (i + 1), par , end, print);
             root = link_nodes(root, new, 1);
             break;
         }
@@ -380,7 +396,8 @@ struct node *build_tree(char *exp[], int len, int par, int *end)
             if(i+1 < len)
             {
                 int add = 0;
-                new = build_tree(exp + i + 1, len - (i + 1), par + 1, &add);
+                new = build_tree(exp + i + 1, len - (i + 1), par + 1, &add, \
+                print);
                 i = i + 1 + add;
                 //printf("je reprend à la position %d\n", i);
             }
@@ -397,6 +414,9 @@ struct node *build_tree(char *exp[], int len, int par, int *end)
                 err_number = 6;
                 break;
             }
+            if(new->type == PRINT || new->type == EXEC || \
+            new->type == EXECDIR || new->type == DELETE)
+                *print += 1;
             else if(i+1 < len)
                 i = add_arg(new, exp, i+1, len);
             else

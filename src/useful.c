@@ -13,7 +13,6 @@ void __attribute__((noreturn)) fail(const char* msg) {
   perror(msg);
   exit(errno);
 }
-
 void append_string(char *dest, char *first, char *second)
 {
     int i = 0;
@@ -30,6 +29,19 @@ int get_size(const char *str)
     int i = 0;
     for(; str[i]; ++i);
     return i+1;
+}
+char *get_fullpath(char *path, char *file)
+{
+    char *res = malloc(get_size(path) + get_size(file));
+    int i = 0;
+    int j = 0;
+    for(; path[i] != 0; ++i)
+        res[i] = path[i];
+    res[i++] = '/';
+    for(; file[j] != 0; ++j)
+        res[i+j] = file[j];
+    res[i+j] = 0;
+    return res;
 }
 
 int my_strcmp(const char *a, const char *b)

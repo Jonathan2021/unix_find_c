@@ -12,6 +12,6 @@ int is_group(char *path, struct node *n);
 int is_newer(char *path, struct node *n);
 int my_exec(struct node *n, char *path);
 int my_execdir(struct node *n, char *path, char *file);
-int my_type(struct node *n, char *path);
+int my_type(struct node *n, char *full_name);
 
 #endif
