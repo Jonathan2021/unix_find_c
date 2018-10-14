@@ -458,8 +458,10 @@ void generate_all(int maxdepth, nodevector& nodes) {
 stringvector args;
 
 void dumpOnExit(int, void*) {
-  printf("Input: ");
-  printStrings(args);
+  if (!args.empty()) {
+    printf("Input: ");
+    printStrings(args);
+  }
 }
 
 int main(void) {
