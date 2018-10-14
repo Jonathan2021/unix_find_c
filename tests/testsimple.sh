@@ -1,5 +1,9 @@
 #!/bin/sh
 
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+END='\e[0m'
+
 # Check that output is equivalent to that of the real find.
 
 T1=$(mktemp)
@@ -9,8 +13,15 @@ while read args ; do
   $FIND $args | sort > $T1
   find $args | sort > $T2
 
-  diff $T1 $T2 || exit 1
+  if diff $T1 $T2 ; then
+    echo "$GREEN$args$END"
+  else
+    echo "$RED$args$END"
+    exit 1
+  fi
+
 done <<EOF
+doesnotexist
 files
 files -type d
 files -name a
