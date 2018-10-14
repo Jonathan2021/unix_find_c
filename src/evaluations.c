@@ -63,18 +63,15 @@ int get_perm(const char *s, char *tag, int perm[])
     return 1;
 }
 
-int perm(char *path, struct node *n)
+int perm(int fd, struct node *n)
 {
     struct stat buf;
     int all_perm[3] = { 0, 0, 0};
     char tag = 0;
     if(!get_perm(n->arg, &tag, all_perm))
         exit(1);
-    if(stat(path, &buf))
-    {
-        fprintf(stderr, "myfind: in -perm: couldn't get stat of %s\n", path);
-        return 0;
-    }
+    if(fstat(fd, &buf))
+        fail("fstat");
     mode_t mode = 64 * all_perm[0] + 8 * all_perm[1] + all_perm[2];
     mode_t file_mode = buf.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
     if(tag == '-')
@@ -88,43 +85,34 @@ int perm(char *path, struct node *n)
     return 0;
 }
 
-int is_user(char *path, struct node *n)
+int is_user(int fd, struct node *n)
 {
     struct stat buf;
     struct passwd *pass = getpwnam(n->arg);
     if(!pass)
         return 0;
-    if(stat(path, &buf))
-    {
-        fprintf(stderr, "myfind: in -user: couldn't get stat of %s\n", path);
-        return 0;
-    }
+    if(fstat(fd, &buf))
+        fail("fstat");
     return (buf.st_uid == pass->pw_uid);
 }
 
-int is_group(char *path, struct node *n)
+int is_group(int fd, struct node *n)
 {
     struct stat buf;
     struct group *grp = getgrnam(n->arg);
     if(!grp)
         return 0;
-    if(stat(path, &buf))
-    {
-        fprintf(stderr, "myfind: in -group: couldn't get stat of %s\n", path);
-        return 0;
-    }
+    if(fstat(fd, &buf))
+        fail("fstat");
     return (buf.st_gid == grp->gr_gid);
 }
 
-int is_newer(char *path, struct node *n)
+int is_newer(int fd, struct node *n)
 {
     struct stat buf_path;
     struct stat buf_compare;
-    if(stat(path, &buf_path))
-    {
-        fprintf(stderr, "myfind: in -newer: couldn't get stat of %s\n", path);
-        return 0;
-    }
+    if(fstat(fd, &buf_path))
+        fail("fstat");
     if(stat(n->arg, &buf_compare))
     {
         fprintf(stderr, "myfind: in -groupe: couldn't get stat of %s\n", \
@@ -251,13 +239,11 @@ int my_execdir(struct node *n, char *path, char *file)
 
 }
 
-int my_type(struct node *n, char *full_name)
+int my_type(struct node *n, int fd)
 { 
     struct stat buf;
-    if(stat(full_name, &buf))
-    {
-        fprintf(stderr, "myfind: -type: couldn't get stat of %s\n", full_name);
-    }
+    if(fstat(fd, &buf))
+        fail("fstat");
     mode_t mode = buf.st_mode;
     if(!my_strcmp(n->arg, "b"))
         return (mode & S_IFBLK);

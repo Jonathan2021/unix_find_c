@@ -5,7 +5,7 @@
 
 //int print()
 
-int evaluate_node(struct node *node, char *path, char *file)
+int evaluate_node(struct node *node, int fd, char *path, char *file)
 {
     int res = 0;
     //printf("file is:%s\n", file);
@@ -21,7 +21,7 @@ int evaluate_node(struct node *node, char *path, char *file)
             res = name_match(node, file);
             break;
         case TYPE:
-            res = my_type(node, full_name);
+            res = my_type(node, fd);
             break;
         case PRINT:
             res = print_path(path, file);
@@ -36,25 +36,25 @@ int evaluate_node(struct node *node, char *path, char *file)
             res = my_delete(full_name);
             break;
         case PERM:
-            res = perm(full_name, node);
+            res = perm(fd, node);
             break;
         case USER:
-            res = is_user(full_name, node);
+            res = is_user(fd, node);
             break;
         case GROUP:
-            res = is_group(full_name, node);
+            res = is_group(fd, node);
             break;
         case NEWER:
-            res = is_newer(full_name, node);
+            res = is_newer(fd, node);
             break;
         case AND:
             free(full_name);
-            return (evaluate_node(node->left, path, file) \
-            && evaluate_node(node->right, path, file));
+            return (evaluate_node(node->left, fd, path, file) \
+            && evaluate_node(node->right, fd, path, file));
         case OR:
             free(full_name);
-            return (evaluate_node(node->left, path, file) || \
-            evaluate_node(node->right, path, file));
+            return (evaluate_node(node->left, fd, path, file) || \
+            evaluate_node(node->right, fd, path, file));
         case TRUE:
             free(full_name);
             return 1;

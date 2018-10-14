@@ -6,12 +6,12 @@
 int my_delete(char *path);
 int print_path(char *path, char *file);
 int name_match(struct node *n, char *file_name);
-int perm(char *path, struct node *n);
-int is_user(char *path, struct node *n);
-int is_group(char *path, struct node *n);
-int is_newer(char *path, struct node *n);
+int perm(int fd, struct node *n);
+int is_user(int fd, struct node *n);
+int is_group(int fd, struct node *n);
+int is_newer(int fd, struct node *n);
 int my_exec(struct node *n, char *path);
 int my_execdir(struct node *n, char *path, char *file);
-int my_type(struct node *n, char *full_name);
+int my_type(struct node *n, int fd);
 
 #endif

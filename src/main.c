@@ -64,32 +64,38 @@ void search(const char *file, struct node* expr, struct Settings settings,
     char *path, *name;
     split(file, &path, &name);
 
-    evaluate_node(expr, path, name);
-
-    // If this a directory, recurse into it.
-    // FIXME: Might get into infinite loop when following symlinks.
-
     // Decide whether to follow symlinks.
     int follow = 0;
     if (settings.symlinkPolicy == FOLLOW_NONE ||
       (settings.symlinkPolicy == FOLLOW_ARGS && !top_level))
         follow = O_NOFOLLOW;
 
-    int fd = open(file, follow | O_RDONLY);
-    if (fd < 0) {
-        if (errno != ELOOP) // Don't exit if symlink we didn't follow.
-            fail(file);
-        goto out;
-    }
+    // Using O_PATH + O_NOFOLLOW means we get the symbolic link, not what it
+    // points to.
+    int fd = open(file, follow | O_RDONLY | O_PATH);
+    if (fd < 0)
+        fail(file);
 
-    // Is it a directory?
+    evaluate_node(expr, fd, path, name);
+
+    // Is it a directory?  If this a directory, recurse into it.
+    // FIXME: Might get into infinite loop when following symlinks.
+
     struct stat statbuf;
     if (fstat(fd, &statbuf) < 0)
         fail("stat");
     if (!S_ISDIR(statbuf.st_mode))
-        goto nodir;
+        goto out;
 
-    // It is.  Loop through the contents.
+    // Directory was opened using O_PATH, which means we can't read it.  Reopen
+    // without O_PATH.  If someone deletes the directory beneath us and replaces
+    // it with something else then we may fail here or below, but that seems OK.
+    close(fd);
+    fd = open(file, O_RDONLY);
+    if (fd < 0)
+        fail(file);
+
+    // Loop through the directory contents.
     DIR* dir = fdopendir(fd);
     if (!dir)
         fail("fdopendir");
@@ -127,9 +133,9 @@ void search(const char *file, struct node* expr, struct Settings settings,
     } while (1);
 
     closedir(dir);
-nodir:
-    close(fd);
+
 out:
+    close(fd);
     free(name);
     free(path);
 }
