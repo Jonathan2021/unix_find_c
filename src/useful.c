@@ -4,12 +4,14 @@
 #include <unistd.h>
 #include "useful.h"
 
-void __attribute__((noreturn)) error(const char* msg) {
+void __attribute__((noreturn)) error(const char* msg)
+{
   fprintf(stderr, "error: %s\n", msg);
   exit(1);
 }
 
-void __attribute__((noreturn)) fail(const char* msg) {
+void __attribute__((noreturn)) fail(const char* msg)
+{
   perror(msg);
   exit(errno);
 }

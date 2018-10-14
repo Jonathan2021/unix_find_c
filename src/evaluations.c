@@ -63,7 +63,7 @@ int get_perm(const char *s, char *tag, int perm[])
 int perm(int fd, struct node *n)
 {
     struct stat buf;
-    int all_perm[3] = { 0, 0, 0};
+    int all_perm[3] = { 0, 0, 0 };
     char tag = 0;
     if(!get_perm(n->arg, &tag, all_perm))
         exit(1);
@@ -149,9 +149,26 @@ char **get_args(struct node* n, const char *path)
     return res;
 }
 
+int is_bracket(int elements, const char *str)
+{
+    int j = 0;
+    for(int i = 0; i < elements; ++i)
+    {
+        if(!my_strcmp(str + j, "{}"))
+            return 1;
+        j += get_size(str + j);
+    }
+    return 0;
+}
+
 int my_exec(struct node *n, const char *full_path)
 {
     int res = 0;
+    if(n->is_plus == '+' && !is_bracket(n->elements, n->arg))
+    {
+        fprintf(stderr, "myfind: paramètre manquant pour « -exec »");
+        exit(1);
+    }
     char **args = get_args(n, full_path);
     if(n->is_plus != '+' && n->is_plus != ';')
     {
@@ -188,6 +205,11 @@ int my_exec(struct node *n, const char *full_path)
 int my_execdir(struct node *n, char *path, char *file)
 {
     int res = 0;
+    if(n->is_plus == '+' && !is_bracket(n->elements, n->arg))
+    {
+        fprintf(stderr, "myfind: paramètre manquant pour « -exec »");
+        exit(1);
+    }
     char *new_path = malloc(2 + get_size(file));
     if(!new_path)
     {
