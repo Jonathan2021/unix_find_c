@@ -77,31 +77,29 @@ int name_match(struct node *n, char *file_name)
     return !res;
 }
 
-int get_perm(const char *s, char *tag, int perm[])
+int get_perm(const char *s, char *tag, mode_t *mode)
 {
     int size;
     const char *tmp = s;
-    if((size = get_size(s)) > 5 || size < 4)
+
+    *mode = 0;
+    if((size = get_size(s)) > 5 || size < 1)
     {
         fprintf(stderr, "myfind: -perm: mode non valide « ‘%s’ »\n", s);
         return 0;
     }
-    if(size == 5)
-    {
-        if(s[0] == '-' || s[0] == '/' || s[0] == '+')
-            *tag = s[0];
-        else
-        {
-            fprintf(stderr, "myfind: -perm: unknown %c\n", s[0]);
-            return 0;
-        }
-        s++;
+
+    if(s[0] == '-' || s[0] == '/' || s[0] == '+') {
+        *tag = s[0];
+        ++s;
+    } else {
+        *tag = 0;
     }
-    for(int i = 0; s[i] != '\0' && i < 3; ++i)
-    {
-        if(s[i] >= '0' && s[i] <= '7')
+
+    for (; *s; ++s) {
+        if(*s >= '0' && *s <= '7')
         {
-                perm[i] = s[i] - '0';
+                *mode = 8 * *mode + (*s - '0');
         }
         else
         {
@@ -115,13 +113,12 @@ int get_perm(const char *s, char *tag, int perm[])
 int perm(int fd, struct node *n)
 {
     struct stat buf;
-    int all_perm[3] = { 0, 0, 0 };
+    mode_t mode;
     char tag = 0;
-    if(!get_perm(n->arg, &tag, all_perm))
+    if(!get_perm(n->arg, &tag, &mode))
         exit(1);
     if(fstat(fd, &buf))
         fail("fstat");
-    mode_t mode = 64 * all_perm[0] + 8 * all_perm[1] + all_perm[2];
     mode_t file_mode = buf.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
     if(tag == '-')
         return ((file_mode & mode) == mode);
