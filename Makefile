@@ -24,8 +24,8 @@ $(BIN): $(OBJ)
 treetest: $(TESTOBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-test: $(BIN) treetest
-	./runtests.sh
+check: $(BIN) treetest
+	cd tests && ./runtests
 	./treetest
 
 clean:
