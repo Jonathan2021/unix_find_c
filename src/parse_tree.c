@@ -30,7 +30,7 @@ int evaluate_node(struct node *node, char *path, char *file)
             res = my_exec(node, full_name);
             break;
         case EXECDIR:
-            res = my_execdir(node, full_name, file);
+            res = my_execdir(node, path, file);
             break;
         case DELETE:
             res = my_delete(full_name);
@@ -417,7 +417,7 @@ struct node *build_tree(char *exp[], int len, int par, int *end, int *print)
             if(new->type == PRINT || new->type == EXEC || \
             new->type == EXECDIR || new->type == DELETE)
                 *print += 1;
-            else if(i+1 < len)
+            if(i+1 < len)
                 i = add_arg(new, exp, i+1, len);
             else
                 i++;

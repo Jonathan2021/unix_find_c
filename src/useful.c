@@ -33,6 +33,11 @@ int get_size(const char *str)
 char *get_fullpath(char *path, char *file)
 {
     char *res = malloc(get_size(path) + get_size(file));
+    if(!res)
+    {
+        fail("malloc");
+        return NULL;
+    }
     int i = 0;
     int j = 0;
     for(; path[i] != 0; ++i)

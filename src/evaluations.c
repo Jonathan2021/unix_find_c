@@ -15,7 +15,7 @@ n'est pas vide\n", full_name);
 int print_path(char *path, char *file)
 {
     if (!my_strcmp(path, "."))
-        printf("./%s\n", file);
+        printf("%s\n", file);
     else
         printf("%s/%s\n", path, file);
     return 1;
@@ -167,6 +167,7 @@ char **get_args(struct node* n, char *path)
 int my_exec(struct node *n, char *path)
 {
     int res = 0;
+    char **args = get_args(n, path);
     if(n->is_plus != '+' && n->is_plus != ';')
     {
         fprintf(stderr, "myfind: -exec: expected + or ;");
@@ -178,7 +179,6 @@ int my_exec(struct node *n, char *path)
     }
     if(!pid)
     {
-        char **args = get_args(n, path);
         if(execvp(n->arg, args)  < 0)
         {
             fprintf(stderr,"execvp failed\n");
@@ -189,10 +189,12 @@ int my_exec(struct node *n, char *path)
     {
         int wstatus;
         waitpid(pid, &wstatus, 0);
-        if(!WIFEXITED(wstatus))
-            return 0;
-        res = !WEXITSTATUS(wstatus);
+        res = WIFEXITED(wstatus);
+        if(res)
+            res = !WEXITSTATUS(wstatus);
     }
+    if(args)
+        free(args);
     if(n->is_plus == '+')
         return 1;
     return res;
@@ -202,7 +204,13 @@ int my_execdir(struct node *n, char *path, char *file)
 {
     int res = 0;
     char *new_path = malloc(2 + get_size(file));
+    if(!new_path)
+    {
+        fail("malloc");
+        return 0;
+    }
     append_string(new_path, "./", file);
+    char **args = get_args(n, new_path);
     if(n->is_plus != '+' && n->is_plus != ';')
     {
         fprintf(stderr, "myfind: -execdir: expected + or ;");
@@ -219,7 +227,6 @@ int my_execdir(struct node *n, char *path, char *file)
             fprintf(stderr,"chdir failed\n");
             exit(1);
         }
-        char **args = get_args(n, new_path);
         if(execvp(n->arg, args)  < 0)
         {
             fprintf(stderr,"execvp failed\n");
@@ -234,7 +241,10 @@ int my_execdir(struct node *n, char *path, char *file)
             return 0;
         res = !WEXITSTATUS(wstatus);
     }
-    free(new_path);
+    if(args)
+        free(args);
+    if(new_path)
+        free(new_path);
     if(n->is_plus == '+')
         return 1;
     return res;

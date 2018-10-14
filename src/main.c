@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -176,6 +177,10 @@ int main(int argc, char *argv[])
     if(!print)
     {
         struct node *print_node = init_node();
+        if(!print_node)
+        {
+            fail("malloc");
+        }
         print_node->type = PRINT;
         expr = link_nodes(expr, print_node, 0);
     }
