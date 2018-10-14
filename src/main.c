@@ -76,7 +76,7 @@ void search(const char *file, struct node* expr, struct Settings settings,
     if (fd < 0)
         fail(file);
 
-    evaluate_node(expr, fd, path, name);
+    evaluate_node(expr, fd, path, name, file);
 
     // Is it a directory?  If this a directory, recurse into it.
     // FIXME: Might get into infinite loop when following symlinks.

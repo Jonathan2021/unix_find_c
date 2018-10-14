@@ -5,7 +5,7 @@
 
 //int print()
 
-int evaluate_node(struct node *node, int fd, char *path, char *file)
+int evaluate_node(struct node *node, int fd, char *path, char *file, const char *full_path)
 {
     int res = 0;
     //printf("file is:%s\n", file);
@@ -14,7 +14,6 @@ int evaluate_node(struct node *node, int fd, char *path, char *file)
         fprintf(stderr, "myfind: in evaluate_node: empty node");
         return 0;
     }
-    char *full_name = get_fullpath(path, file);
     switch (node->type)
     {
         case NAME:
@@ -24,16 +23,16 @@ int evaluate_node(struct node *node, int fd, char *path, char *file)
             res = my_type(node, fd);
             break;
         case PRINT:
-            res = print_path(path, file);
+            res = print_path(full_path);
             break;
         case EXEC:
-            res = my_exec(node, full_name);
+            res = my_exec(node, full_path);
             break;
         case EXECDIR:
             res = my_execdir(node, path, file);
             break;
         case DELETE:
-            res = my_delete(full_name);
+            res = my_delete(full_path);
             break;
         case PERM:
             res = perm(fd, node);
@@ -48,22 +47,17 @@ int evaluate_node(struct node *node, int fd, char *path, char *file)
             res = is_newer(fd, node);
             break;
         case AND:
-            free(full_name);
-            return (evaluate_node(node->left, fd, path, file) \
-            && evaluate_node(node->right, fd, path, file));
+            return (evaluate_node(node->left, fd, path, file, full_path) \
+            && evaluate_node(node->right, fd, path, file, full_path));
         case OR:
-            free(full_name);
-            return (evaluate_node(node->left, fd, path, file) || \
-            evaluate_node(node->right, fd, path, file));
+            return (evaluate_node(node->left, fd, path, file, full_path) || \
+            evaluate_node(node->right, fd, path, file, full_path));
         case TRUE:
-            free(full_name);
             return 1;
         default:
-            free(full_name);
             fprintf(stderr, "myfind: in evaluate_node: type NOT_VALID\n");
             return 0;
     }
-    free(full_name);
     return (node->barre) ? !res : res;
 }
 

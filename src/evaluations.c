@@ -3,21 +3,18 @@
 #include "useful.h"
 #include "evaluations.h"
 
-int my_delete(char *full_name)
+int my_delete(const char *full_path)
 {
-    int res = unlink(full_name);
+    int res = unlink(full_path);
     if(res == -1)
         fprintf(stderr, "myfind: impossible de supprimer '%s': Le dossier \
-n'est pas vide\n", full_name);
+n'est pas vide\n", full_path);
     return !res;
 }
 
-int print_path(char *path, char *file)
+int print_path(const char *full_path)
 {
-    if (!my_strcmp(path, "."))
-        printf("%s\n", file);
-    else
-        printf("%s/%s\n", path, file);
+    printf("%s\n", full_path);
     return 1;
 }
 
@@ -122,7 +119,7 @@ int is_newer(int fd, struct node *n)
     return (buf_path.st_mtime > buf_compare.st_mtime);
 }
 
-char **get_args(struct node* n, char *path)
+char **get_args(struct node* n, const char *path)
 {
     int j = 0;
     int size;
@@ -152,10 +149,10 @@ char **get_args(struct node* n, char *path)
     return res;
 }
 
-int my_exec(struct node *n, char *path)
+int my_exec(struct node *n, const char *full_path)
 {
     int res = 0;
-    char **args = get_args(n, path);
+    char **args = get_args(n, full_path);
     if(n->is_plus != '+' && n->is_plus != ';')
     {
         fprintf(stderr, "myfind: -exec: expected + or ;");
