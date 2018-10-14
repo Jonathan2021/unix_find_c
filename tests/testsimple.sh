@@ -31,7 +31,7 @@ files -execdir echo {} ;
 files -exec ls ;
 files -execdir ls ;
 files -perm 755
-files -perm +755
+files -perm /755
 files -perm -5
 files -user jonathan
 files -user duncan
