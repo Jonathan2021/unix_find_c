@@ -478,7 +478,8 @@ int main(void) {
       exp[i] = args[i].c_str();
 
     int end;
-    struct node* parsed = build_tree((char**)exp, (int)args.size(), 0, &end);
+    int print;
+    struct node* parsed = build_tree((char**)exp, (int)args.size(), 0, &end, &print);
     if (!equivalent(orig, parsed)) {
       printf("Parsed as: ");
       printNode(parsed);
