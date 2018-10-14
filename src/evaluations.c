@@ -2,14 +2,66 @@
 #include "parse_tree.h"
 #include "useful.h"
 #include "evaluations.h"
+#include <errno.h>
+
+int delete_dir(const char *full_path) {
+    int res = 1;
+
+    // Recursively delete the directory contents.
+    DIR* dir = opendir(full_path);
+    if (!dir) {
+        perror(full_path);
+        return 0;
+    }
+    struct dirent* ent;
+    do {
+        errno = 0;
+        ent = readdir(dir);
+        if (!ent) {
+            if (!errno)
+                break;
+            perror(full_path);
+            return 0;
+        }
+        if (!my_strcmp(ent->d_name, ".."))
+            continue;
+        if (!my_strcmp(ent->d_name, "."))
+            continue;
+        int dir_len = get_size(full_path) - 1;
+        int file_len = get_size(ent->d_name) - 1;
+        char *new_path = malloc(dir_len + file_len + 2);
+        if (!new_path)
+            fail("malloc");
+        int target = 0;
+        for (int i = 0; i < dir_len; ++i)
+            new_path[target++] = full_path[i];
+        new_path[target++] = '/';
+        for (int i = 0; i < file_len; ++i)
+            new_path[target++] = ent->d_name[i];
+        new_path[target++] = 0;
+        res = my_delete(new_path) && res;
+    } while (1);
+    closedir(dir);
+
+    // Delete the directory.
+    if (rmdir(full_path)) {
+        perror(full_path);
+        return 0;
+    }
+
+    return res;
+}
 
 int my_delete(const char *full_path)
 {
     int res = unlink(full_path);
-    if(res == -1)
-        fprintf(stderr, "myfind: impossible de supprimer '%s': Le dossier \
-n'est pas vide\n", full_path);
-    return !res;
+    if (!res)
+        return 1;
+    if (errno != EISDIR) {
+        perror(full_path);
+        return 0;
+    }
+    return delete_dir(full_path);
 }
 
 int print_path(const char *full_path)
@@ -259,7 +311,7 @@ int my_execdir(struct node *n, char *path, char *file)
 }
 
 int my_type(struct node *n, int fd)
-{ 
+{
     struct stat buf;
     if(fstat(fd, &buf))
         fail("fstat");
@@ -280,6 +332,6 @@ int my_type(struct node *n, int fd)
         return (mode & S_IFSOCK);
     else
         fprintf(stderr, "myfind: -type: invalide type %s\n", n->arg);
-    
+
     return 0;
 }

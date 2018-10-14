@@ -88,12 +88,12 @@ void search(const char *file, struct node* expr, struct Settings settings,
         goto out;
 
     // Directory was opened using O_PATH, which means we can't read it.  Reopen
-    // without O_PATH.  If someone deletes the directory beneath us and replaces
-    // it with something else then we may fail here or below, but that seems OK.
+    // without O_PATH.
     close(fd);
     fd = open(file, O_RDONLY);
     if (fd < 0)
-        fail(file);
+        // Directory no longer exists.  Probably we just deleted it.
+        goto dofree;
 
     // Loop through the directory contents.
     DIR* dir = fdopendir(fd);
@@ -136,6 +136,7 @@ void search(const char *file, struct node* expr, struct Settings settings,
 
 out:
     close(fd);
+dofree:
     free(name);
     free(path);
 }
