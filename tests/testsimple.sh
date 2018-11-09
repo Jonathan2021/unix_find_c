@@ -8,9 +8,14 @@ END='\e[0m'
 
 T1=$(mktemp)
 T2=$(mktemp)
+VAL='valgrind --leak-check=full --show-leak-kinds=all'
 
+mkdir -p to_del/bonjour/salut
+touch to_del/fichier
+touch to_del/bonjour/hey.txt
+mv to_del/ files/
 while read args ; do
-  $FIND $args | sort > $T1
+  $VAL $FIND $args | sort > $T1
   find $args | sort > $T2
 
   if diff $T1 $T2 ; then
@@ -39,6 +44,7 @@ files -group jonathan
 files -group duncan
 files -newer ./testsimple.sh
 files -true
+files/to_del -delete
 EOF
 
 rm $T1 $T2

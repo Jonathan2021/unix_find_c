@@ -9,7 +9,7 @@ struct cmd_arg
     struct cmd_arg *next;
 };
 
-typedef int(*handler)(struct cmd_arg *args);
+typedef int (*handler)(struct cmd_arg *args);
 
 struct cmd
 {
