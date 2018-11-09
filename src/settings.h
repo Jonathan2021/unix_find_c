@@ -11,4 +11,4 @@ struct Settings {
   enum SymlinkPolicy symlinkPolicy;
 };
 
-#endif
+#endif /* !_SETTINGS_H_ */

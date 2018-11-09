@@ -14,4 +14,4 @@ int my_exec(struct node *n, const char *full_path);
 int my_execdir(struct node *n, char *path, char *file);
 int my_type(struct node *n, int fd);
 
-#endif
+#endif /* !_EVAL_H_ */

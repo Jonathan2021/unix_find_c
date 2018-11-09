@@ -10,4 +10,4 @@ void append_string(char *dest, char *first, char *second);
 char *my_strdup(const char* str);
 char *get_fullpath(char *path, char *file);
 
-#endif
+#endif /* !_USEFULE_H_ */

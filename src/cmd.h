@@ -17,4 +17,4 @@ struct cmd
     const char *command_name;
 };
 
-#endif
+#endif /* !_CMD_H_ */

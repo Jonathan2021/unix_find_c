@@ -18,4 +18,4 @@
 #include <pwd.h>
 #include <grp.h>
 
-#endif
+#endif /* !_LIBRARIES_H_ */

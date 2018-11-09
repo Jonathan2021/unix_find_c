@@ -39,4 +39,4 @@ struct node *init_node(void);
 
 typedef int (*node_handler)(struct node);
 
-#endif
+#endif /* !_PARSE_TREE_H_ */
